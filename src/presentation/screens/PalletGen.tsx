@@ -10,7 +10,6 @@ import { useAutoPalletContext } from "@/core/contexts/AutoPalletContexts";
 import { DetallePallet, SavePallet } from "@/core/services/Pallet.service";
 import { plandiarioxTraza } from "@/core/services/PlanDiario.service";
 import { ObtenerTurnoActual } from "@/core/services/Turno.service";
-import { useUsbScanner } from "@/hooks/useUsbScanner";
 import { DataFormPallet } from "@/infraestructure/interfaces";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -23,6 +22,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   buscarAMP,
   desencriptarQRtext,
@@ -34,10 +34,10 @@ const PalletGen = () => {
   const { cargando, palletCarga, setPalletCarga, clearPalletCarga } =
     useAutoPalletContext();
 
-  const { statusLog, setScannedCode } = useUsbScanner({
-    baudRate: 9600,
-    onCodeScanned: (code) => addItem(code),
-  });
+  // const { statusLog, setScannedCode } = useUsbScanner({
+  //   baudRate: 9600,
+  //   onCodeScanned: (code) => addItem(code),
+  // });
 
   const [turno, setTurno] = useState<string>("");
   const [scanInput, setScanInput] = useState("");
@@ -45,6 +45,8 @@ const PalletGen = () => {
   const [cabecera, setCabecera] = useState<any>(null);
   const [lastScan, setLastScan] = useState<any>(null);
   const inputRef = useRef<TextInput>(null);
+
+  const insets = useSafeAreaInsets();
 
   // Cálculos dinámicos
   const totalWeight = itemsPallet
@@ -223,7 +225,10 @@ const PalletGen = () => {
   if (!cargando) {
     return (
       <>
-        <View className="p-5">
+        <View
+          className="p-5"
+          style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+        >
           <Pressable
             className="w-full uppercase p-5 bg-blue-600 hover:bg-blue-700 rounded-lg text-white flex-row items-center justify-center gap-2"
             onPress={crearPallet}
@@ -242,7 +247,10 @@ const PalletGen = () => {
       className="flex-1  bg-slate-100 font-sans text-slate-900 flex flex-col"
     >
       {/* HEADER NATIVO */}
-      <View className="bg-white px-4 pt-12 pb-4 border-b border-slate-200 flex-row justify-between items-center">
+      <View
+        className="bg-white px-4 pt-12 pb-4 border-b border-slate-200 flex-row justify-between items-center"
+        style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+      >
         <View className="flex-row items-center">
           <View className="bg-blue-500 w-10 h-10 rounded-xl items-center justify-center border border-blue-500">
             <LayerIcon />
@@ -256,9 +264,9 @@ const PalletGen = () => {
             </Text>
           </View>
         </View>
-        <Text className="text-black text-[10px] font-black uppercase">
+        {/* <Text className="text-black text-[10px] font-black uppercase">
           {statusLog}
-        </Text>
+        </Text> */}
         <View className="bg-emerald-500 px-3 py-1 rounded-lg">
           <Text className="text-white text-[10px] font-black uppercase">
             Activo

@@ -3,7 +3,7 @@
     "name": "Fc79UsbDemo",
     "slug": "Fc79UsbDemo",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "landscape",
     "icon": "./assets/images/icon.png",
     "scheme": "fc79usbdemo",
     "userInterfaceStyle": "automatic",
