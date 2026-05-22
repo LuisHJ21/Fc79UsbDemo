@@ -95,6 +95,14 @@ export const CircleInfoIcon = ({ color, size }: IconProps) => (
   />
 );
 
+export const PrintIcon = ({ color, size }: IconProps) => (
+  <MaterialCommunityIcons
+    name="printer"
+    size={size ?? 24}
+    color={color ?? "white"}
+  />
+);
+
 export const QrCodeScan = ({ color, size }: IconProps) => (
   <MaterialCommunityIcons
     name="qrcode-scan"
@@ -133,6 +141,14 @@ export const ConfirmIcon = ({ color, size }: IconProps) => (
 
 export const QuestionIcon = ({ color, size }: IconProps) => (
   <FontAwesome6 name="question" size={size ?? 24} color={color ?? "white"} />
+);
+
+export const SearchIcon = ({ color, size }: IconProps) => (
+  <MaterialCommunityIcons
+    name="search-web"
+    size={size ?? 24}
+    color={color ?? "white"}
+  />
 );
 
 export const LoadingIcon = ({ color, size }: IconProps) => {

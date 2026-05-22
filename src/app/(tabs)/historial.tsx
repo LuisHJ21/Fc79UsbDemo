@@ -1,5 +1,7 @@
-import PalletGen from "@/presentation/screens/PalletGen";
+import { Text } from "react-native";
 
 export default function TabTwoScreen() {
-  return <PalletGen />;
+  return <>
+  <Text>Historial</Text>
+  </>
 }

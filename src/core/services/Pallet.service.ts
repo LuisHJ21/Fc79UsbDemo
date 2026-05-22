@@ -44,6 +44,7 @@ export const SavePallet = async (
       id,
       operacion,
     });
+
     if (peticion.data.result && peticion.data.result === "error")
       throw new Error(peticion.data.message);
     return peticion.data;
@@ -58,6 +59,56 @@ export const SavePallet = async (
       message = error;
     }
     SetErrorLog(message.toString(), "GUARDAR PALLET", datos.usuario);
+    return { result: "error", message: message.toString() };
+  }
+};
+
+export const SearchPallet = async (numPallet: string) => {
+  try {
+    const url = `pallet`;
+    const datos: PalletDetail = {
+      operacion: "detalle",
+      numPallet: numPallet,
+    };
+    const peticion = await axiosClient.post(url, datos);
+
+    return peticion.data;
+  } catch (error: any) {
+    let message = "";
+
+    if (error.response) {
+      message = error.response.data;
+    } else if (error.request) {
+      message = error.message;
+    } else {
+      message = error;
+    }
+    SetErrorLog(message.toString(), "BUSCAR PALLET");
+    return { result: "error", message: message.toString() };
+  }
+};
+
+export const HistorialPalletIncompleto = async (numPallet: string) => {
+  try {
+    const url = `pallet`;
+    const datos = {
+      numPallet,
+      operacion: "historyIncompleto",
+    };
+    const peticion = await axiosClient.post(url, datos);
+
+    return peticion.data;
+  } catch (error: any) {
+    let message = "";
+
+    if (error.response) {
+      message = error.response.data;
+    } else if (error.request) {
+      message = error.message;
+    } else {
+      message = error;
+    }
+    SetErrorLog(message.toString(), "OBTENER PALLETS INCOMPLETOS");
     return { result: "error", message: message.toString() };
   }
 };

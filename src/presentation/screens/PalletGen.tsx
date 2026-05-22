@@ -3,26 +3,29 @@ import {
   ClockIcon,
   LayerIcon,
   PalletIcon,
-  QrCodeScan,
+  PrintIcon,
+  SearchIcon,
   WeightIcon,
 } from "@/constants/Icons";
 import { useAutoPalletContext } from "@/core/contexts/AutoPalletContexts";
 import { DetallePallet, SavePallet } from "@/core/services/Pallet.service";
 import { plandiarioxTraza } from "@/core/services/PlanDiario.service";
+import { ImprimirQR } from "@/core/services/Print.service";
 import { ObtenerTurnoActual } from "@/core/services/Turno.service";
 import { DataFormPallet } from "@/infraestructure/interfaces";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
   Text,
   TextInput,
-  TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import MdlPallets from "../components/MdlPallets";
 import {
   buscarAMP,
   desencriptarQRtext,
@@ -46,7 +49,13 @@ const PalletGen = () => {
   const [lastScan, setLastScan] = useState<any>(null);
   const inputRef = useRef<TextInput>(null);
 
+  const [visibityMdl, setVisibityMdl] = useState(false);
+
   const insets = useSafeAreaInsets();
+
+  const changeVisibityMdl = () => {
+    setVisibityMdl(!visibityMdl);
+  };
 
   // Cálculos dinámicos
   const totalWeight = itemsPallet
@@ -54,7 +63,10 @@ const PalletGen = () => {
     .toFixed(2);
   const totalBoxes = itemsPallet.length;
   const articleCode =
-    itemsPallet.length > 0 ? itemsPallet[0].codigoArt : "SIN DATOS";
+    itemsPallet.length > 0 ? itemsPallet[0].codigoArt : "----";
+
+  const paddingTop = insets.top;
+  const paddingBottom = insets.bottom;
 
   const obtenerTurno = async () => {
     const peticion = await ObtenerTurnoActual();
@@ -88,7 +100,13 @@ const PalletGen = () => {
     // loadingSave();
     const peticion = await SavePallet(datos, turno, "save");
 
-    const { message } = peticion;
+    const { message, result } = peticion;
+
+    if (result === "error") {
+      Alert.alert("ERROR", message);
+
+      return;
+    }
 
     setPalletCarga(message);
     // SwAlert.close();
@@ -216,28 +234,45 @@ const PalletGen = () => {
       // SwAlert.close();
     }
   };
+  const Imprimir = async () => {
+    if  (!palletCarga) return;
+
+    ImprimirQR(palletCarga);
+  };
+
+  const CerrarPallet=()=>
+  {
+
+  }
 
   useEffect(() => {
     obtenerTurno();
   }, []);
 
-  console.log(cargando);
   if (!cargando) {
     return (
-      <>
-        <View
-          className="p-5"
-          style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
-        >
+      <View style={{ paddingTop: paddingTop, paddingBottom: paddingBottom }}>
+        <MdlPallets
+          visible={visibityMdl}
+          changeVisibityMdl={changeVisibityMdl}
+        />
+        <View className="p-5 flex-row gap-2">
           <Pressable
-            className="w-full uppercase p-5 bg-blue-600 hover:bg-blue-700 rounded-lg text-white flex-row items-center justify-center gap-2"
+            className="flex-1 flex-col uppercase p-5 bg-blue-600 hover:bg-blue-700 rounded-lg text-white  items-center justify-center gap-2"
             onPress={crearPallet}
           >
             <PalletIcon size={30} />
             <Text className="font-bold text-lg text-white">Generar Pallet</Text>
           </Pressable>
+          <Pressable
+            className=" flex-1 flex-col uppercase p-5 bg-blue-600 hover:bg-blue-700 rounded-lg text-white  items-center justify-center gap-2"
+            onPress={changeVisibityMdl}
+          >
+            <SearchIcon size={30} />
+            <Text className="font-bold text-lg text-white">Buscar Pallet</Text>
+          </Pressable>
         </View>
-      </>
+      </View>
     );
   }
 
@@ -245,21 +280,19 @@ const PalletGen = () => {
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       className="flex-1  bg-slate-100 font-sans text-slate-900 flex flex-col"
+      style={{ paddingTop: paddingTop, paddingBottom: paddingBottom }}
     >
       {/* HEADER NATIVO */}
-      <View
-        className="bg-white px-4 pt-12 pb-4 border-b border-slate-200 flex-row justify-between items-center"
-        style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
-      >
+      <View className="bg-white px-4 border-b border-slate-200 flex-row justify-between items-center py-5">
         <View className="flex-row items-center">
-          <View className="bg-blue-500 w-10 h-10 rounded-xl items-center justify-center border border-blue-500">
+          <View className="bg-blue-700 w-10 h-10 rounded-xl items-center justify-center border border-blue-700">
             <LayerIcon />
           </View>
           <View className="ml-3">
-            <Text className="text-sm font-black uppercase tracking-tighter">
+            <Text className=" font-black uppercase tracking-tighter">
               Auto-Carga
             </Text>
-            <Text className="text-[10px] font-mono text-slate-400">
+            <Text className="text-xs font-mono text-slate-400">
               MODO AUTOMÁTICO
             </Text>
           </View>
@@ -267,16 +300,20 @@ const PalletGen = () => {
         {/* <Text className="text-black text-[10px] font-black uppercase">
           {statusLog}
         </Text> */}
-        <View className="bg-emerald-500 px-3 py-1 rounded-lg">
-          <Text className="text-white text-[10px] font-black uppercase">
-            Activo
-          </Text>
-        </View>
+        <Pressable className="w-auto flex flex-col bg-blue-600 hover:bg-blue-700 rounded-lg p-3 text-white font-bold"
+        onPress={Imprimir}>
+          <View className="flex-row items-center gap-2">
+            <PrintIcon />
+            <Text className="text-white  font-black uppercase">
+              Imprimir QR
+            </Text>
+          </View>
+        </Pressable>
       </View>
 
       <View className="flex-row">
         <View className="flex-1">
-          <View className="mx-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+          {/* <View className="mx-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
             <View className="relative flex-row items-center bg-slate-50 border-2 border-slate-100 rounded-xl px-4 py-1">
               <QrCodeScan color="#3B82F6" />
               <TextInput
@@ -290,12 +327,29 @@ const PalletGen = () => {
                 className="flex-1 h-6 ml-3 text-slate-900 font-bold"
               />
             </View>
+          </View> */}
+          {/* CARD LINEA */}
+           <View
+            className={`m-4 bg-white p-5 rounded-3xl border ${lastScan ? "border-blue-700" : "border-slate-200  "}`}
+          >
+            <View className="flex-row justify-between items-center mb-2">
+              <Text className="text font-black uppercase text-blue-700 tracking-widest">
+               Linea Configurada
+              </Text>
+              <ClockIcon />
+            </View>
+
+            <View className="flex-row justify-between items-end">
+             <Text>Linea 1</Text>
+            </View>
           </View>
+      
+
           {/* CARD INFO PRINCIPAL */}
           <View className="m-4 bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
             <View className="flex-row items-center mb-4">
-              <PalletIcon color="#3B82F6" />
-              <Text className="text-lg font-black uppercase text-slate-400 ml-2 tracking-widest">
+              <PalletIcon color="#1D4ED8" />
+              <Text className="text-xl font-black uppercase text-slate-700 ml-2 tracking-widest">
                 Pallet N° {palletCarga}
               </Text>
             </View>
@@ -312,7 +366,7 @@ const PalletGen = () => {
                 <Text className="text-[8px] font-bold text-slate-400 uppercase mb-1">
                   Cajas
                 </Text>
-                <Text className="text-xl font-black text-emerald-600">
+                <Text className="text-xl font-black text-blue-700">
                   {totalBoxes}
                 </Text>
               </View>
@@ -320,7 +374,7 @@ const PalletGen = () => {
                 <Text className="text-[8px] font-bold text-slate-400 uppercase mb-1">
                   Peso Total
                 </Text>
-                <Text className="text-xl font-black text-emerald-600">
+                <Text className="text-xl font-black text-blue-700">
                   {totalWeight} <Text className="text-xs">KG</Text>
                 </Text>
               </View>
@@ -331,10 +385,10 @@ const PalletGen = () => {
 
           {/* ÚLTIMA CAJA */}
           <View
-            className={`m-4 p-5 rounded-3xl border-2 bg-white ${lastScan ? "border-emerald-500" : "border-slate-100 opacity-50"}`}
+            className={`m-4 bg-gray-500 p-5 rounded-3xl border ${lastScan ? "border-blue-700" : "border-slate-200  "}`}
           >
             <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-[9px] font-black uppercase text-emerald-600 tracking-widest">
+              <Text className=" font-black uppercase text-white tracking-widest">
                 Última Lectura
               </Text>
               <ClockIcon />
@@ -342,18 +396,18 @@ const PalletGen = () => {
 
             <View className="flex-row justify-between items-end">
               <View>
-                <Text className="text-[8px] font-bold text-slate-400 uppercase">
+                <Text className="text-[8px] font-bold text-white uppercase">
                   Traza
                 </Text>
-                <Text className="text-sm font-bold text-slate-700">
+                <Text className="text-sm font-bold text-slate-200">
                   {lastScan?.traza || "---"}
                 </Text>
               </View>
               <View className="items-end">
-                <Text className="text-[8px] font-bold text-slate-400 uppercase">
+                <Text className="text-[8px] font-bold text-white uppercase">
                   Peso
                 </Text>
-                <Text className="text-lg font-black text-emerald-600">
+                <Text className="text-lg font-black text-slate-200">
                   {lastScan?.peso || "0.00"} KG
                 </Text>
               </View>
@@ -392,18 +446,18 @@ const PalletGen = () => {
           </ScrollView>
           {/* BOTÓN DE CIERRE FIJO */}
           <View className="p-4 bg-white border-t border-slate-100">
-            <TouchableOpacity
+            <Pressable
               disabled={totalBoxes === 0}
-              activeOpacity={0.8}
-              className={`w-full py-5 rounded-2xl flex-row items-center justify-center ${totalBoxes > 0 ? "bg-emerald-600 shadow-lg shadow-emerald-200" : "bg-slate-100"}`}
+              //activeOpacity={0.8}
+              className={`w-full py-5 rounded-2xl flex-row items-center justify-center ${totalBoxes > 0 ? "bg-blue-700 shadow-lg shadow-blue-200" : "bg-slate-300"}`}
             >
               <Text
-                className={`font-black text-xs uppercase tracking-widest mr-3 ${totalBoxes > 0 ? "text-white" : "text-slate-300"}`}
+                className={`font-black text-xs uppercase tracking-widest mr-3 ${totalBoxes > 0 ? "text-white" : "text-slate-500"}`}
               >
                 Finalizar Pallet
               </Text>
               <WeightIcon />
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
       </View>
