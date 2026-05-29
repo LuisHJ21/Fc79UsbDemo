@@ -8,10 +8,12 @@ import {
   WeightIcon,
 } from "@/constants/Icons";
 import { useAutoPalletContext } from "@/core/contexts/AutoPalletContexts";
+import { useConfContext } from "@/core/contexts/ConfContext";
 import { DetallePallet, SavePallet } from "@/core/services/Pallet.service";
 import { plandiarioxTraza } from "@/core/services/PlanDiario.service";
 import { ImprimirQR } from "@/core/services/Print.service";
 import { ObtenerTurnoActual } from "@/core/services/Turno.service";
+import { useUsbScanner } from "@/hooks/useUsbScanner";
 import { DataFormPallet } from "@/infraestructure/interfaces";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -22,12 +24,13 @@ import {
   ScrollView,
   Text,
   TextInput,
-  View
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MdlPallets from "../components/MdlPallets";
 import {
   buscarAMP,
+  ConfirmDialog,
   desencriptarQRtext,
   ExtraerData,
   SearchArticulo,
@@ -37,12 +40,14 @@ const PalletGen = () => {
   const { cargando, palletCarga, setPalletCarga, clearPalletCarga } =
     useAutoPalletContext();
 
-  // const { statusLog, setScannedCode } = useUsbScanner({
-  //   baudRate: 9600,
-  //   onCodeScanned: (code) => addItem(code),
-  // });
+  const { setTurnoActual, turnoActual } = useConfContext();
 
-  const [turno, setTurno] = useState<string>("");
+  const { statusLog, setScannedCode } = useUsbScanner({
+    baudRate: 9600,
+    onCodeScanned: (code) => testLog(code),
+  });
+
+  // const [turno, setTurno] = useState<Turno | null>(null);
   const [scanInput, setScanInput] = useState("");
   const [itemsPallet, setItemsPallet] = useState<any[]>([]);
   const [cabecera, setCabecera] = useState<any>(null);
@@ -72,7 +77,7 @@ const PalletGen = () => {
     const peticion = await ObtenerTurnoActual();
 
     if (!peticion?.error && peticion?.data) {
-      setTurno(peticion.data);
+      setTurnoActual(peticion.data);
     }
   };
 
@@ -86,29 +91,34 @@ const PalletGen = () => {
       usuario: "super5",
     };
 
-    /* const verificar = await SwAlert.fire({
-      icon: "question",
-      title: "¿GENERAR PALLET?",
-      showConfirmButton: true,
-      showCancelButton: true,
-      confirmButtonText: "GENERAR",
-      cancelButtonText: "CANCELAR",
-    });
-
-    if (!verificar.isConfirmed) return;*/
-
     // loadingSave();
-    const peticion = await SavePallet(datos, turno, "save");
 
-    const { message, result } = peticion;
-
-    if (result === "error") {
-      Alert.alert("ERROR", message);
-
+    if (!turnoActual) {
+      Alert.alert("ERROR", "No existe turno iniciado");
       return;
     }
 
-    setPalletCarga(message);
+    ConfirmDialog(
+      "¿GENERAR PALLET?",
+      "",
+      async () => {
+        const peticion = await SavePallet(datos, turnoActual.id, "save");
+
+        const { message, result } = peticion;
+
+        if (result === "error") {
+          Alert.alert("ERROR", message);
+
+          return;
+        }
+
+        setPalletCarga(message);
+      },
+      () => {
+        return;
+      },
+    );
+
     // SwAlert.close();
   };
 
@@ -139,6 +149,12 @@ const PalletGen = () => {
 
   const addItem = async (codigo: string) => {
     // loadingSave("AÑADIENDO...");
+
+    if (!turnoActual) {
+      Alert.alert("ERROR", "No existe turno iniciado");
+
+      return;
+    }
     try {
       if (!palletCarga) return;
 
@@ -152,11 +168,13 @@ const PalletGen = () => {
         qrCode = await desencriptarQRtext(textQr);
       }
 
+      console.log(qrCode);
+
       const detalles = ExtraerData(qrCode);
       const verificar = await SearchArticulo(detalles["codigoArt"]);
 
       if (!verificar) {
-        setScanInput("");
+        // setScanInput("");
         return;
       }
 
@@ -168,13 +186,14 @@ const PalletGen = () => {
       });
 
       if (amp.length === 0) {
+        Alert.alert("NO SE HA ENCONTRADO PROYECCION");
         /* SwAlert.fire({
           icon: "warning",
           text: "NO SE HA ENCONTRADO PROYECCION",
           showConfirmButton: false,
           timer: 1500,
         });*/
-        setScanInput("");
+        //setScanInput("");
         return;
       }
 
@@ -203,7 +222,7 @@ const PalletGen = () => {
         numPallet: palletCarga,
       };
 
-      const peticion = await SavePallet(datos, turno, "update");
+      const peticion = await SavePallet(datos, turnoActual.id, "update");
       console.log(peticion);
 
       if (peticion.result === "error") {
@@ -214,7 +233,9 @@ const PalletGen = () => {
           showConfirmButton: false,
           timer: 2500,
         });*/
-        setScanInput("");
+        //setScanInput("");
+
+        Alert.alert("NO SE HA REALIZADO LA OPERACIÓN");
         return;
       }
 
@@ -226,24 +247,21 @@ const PalletGen = () => {
 
       setLastScan(item);
       setItemsPallet((prev) => [...prev, detalleNew]);
-      setScanInput("");
+      //setScanInput("");
       //* SwAlert.close();
     } catch (error) {
       console.log(error);
-      setScanInput("");
+      //setScanInput("");
       // SwAlert.close();
     }
   };
   const Imprimir = async () => {
-    if  (!palletCarga) return;
+    if (!palletCarga) return;
 
     ImprimirQR(palletCarga);
   };
 
-  const CerrarPallet=()=>
-  {
-
-  }
+  const CerrarPallet = () => {};
 
   useEffect(() => {
     obtenerTurno();
@@ -297,11 +315,13 @@ const PalletGen = () => {
             </Text>
           </View>
         </View>
-        {/* <Text className="text-black text-[10px] font-black uppercase">
+        <Text className="text-black text-[10px] font-black uppercase">
           {statusLog}
-        </Text> */}
-        <Pressable className="w-auto flex flex-col bg-blue-600 hover:bg-blue-700 rounded-lg p-3 text-white font-bold"
-        onPress={Imprimir}>
+        </Text>
+        <Pressable
+          className="w-auto flex flex-col bg-blue-600 hover:bg-blue-700 rounded-lg p-3 text-white font-bold"
+          onPress={Imprimir}
+        >
           <View className="flex-row items-center gap-2">
             <PrintIcon />
             <Text className="text-white  font-black uppercase">
@@ -329,21 +349,20 @@ const PalletGen = () => {
             </View>
           </View> */}
           {/* CARD LINEA */}
-           <View
+          <View
             className={`m-4 bg-white p-5 rounded-3xl border ${lastScan ? "border-blue-700" : "border-slate-200  "}`}
           >
             <View className="flex-row justify-between items-center mb-2">
               <Text className="text font-black uppercase text-blue-700 tracking-widest">
-               Linea Configurada
+                Linea Configurada
               </Text>
               <ClockIcon />
             </View>
 
             <View className="flex-row justify-between items-end">
-             <Text>Linea 1</Text>
+              <Text>Linea 1</Text>
             </View>
           </View>
-      
 
           {/* CARD INFO PRINCIPAL */}
           <View className="m-4 bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
