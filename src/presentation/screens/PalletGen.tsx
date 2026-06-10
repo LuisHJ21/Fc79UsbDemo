@@ -88,7 +88,7 @@ const PalletGen = () => {
       detalles: [],
       observacion: "",
       //operacion: "save",
-      usuario: "super5",
+      usuario: turnoActual?.usuario,
     };
 
     // loadingSave();

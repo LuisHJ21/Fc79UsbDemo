@@ -1,4 +1,4 @@
-import { HistoryIcon, PalletIcon } from "@/constants/Icons";
+import { PalletIcon } from "@/constants/Icons";
 import { ContextAutoStoreProvider } from "@/core/contexts/AutoPalletContexts";
 import { ContextConfProvider } from "@/core/contexts/ConfContext";
 import { Tabs } from "expo-router";
@@ -22,13 +22,13 @@ export default function TabLayout() {
               tabBarIcon: ({ color }) => <PalletIcon color={color} />,
             }}
           />
-          <Tabs.Screen
+          {/* <Tabs.Screen
             name="historial"
             options={{
               title: "Historial",
               tabBarIcon: ({ color }) => <HistoryIcon color={color} />,
             }}
-          />
+          /> */}
         </Tabs>
       </ContextAutoStoreProvider>
     </ContextConfProvider>
