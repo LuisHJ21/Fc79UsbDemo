@@ -327,7 +327,7 @@ const PalletGen = () => {
         </Pressable>
       </View>
 
-      <View className="flex-row">
+      <View className="flex-row flex-1">
         <View className="flex-1">
           {/* <View className="mx-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
             <View className="relative flex-row items-center bg-slate-50 border-2 border-slate-100 rounded-xl px-4 py-1">
@@ -432,43 +432,9 @@ const PalletGen = () => {
               </View>
             </View>
           </View>
-        </View>
 
-        <View className="flex-[2]">
-          <ScrollView
-            className="flex-1"
-            contentContainerStyle={{ paddingBottom: 20 }}
-          >
-            {/* LISTADO DE ITEMS */}
-            <View className="mx-4 mt-2">
-              <Text className="text-[10px] font-black uppercase text-slate-400 mb-3 ml-1 tracking-tighter italic">
-                Detalles de carga
-              </Text>
-
-              {itemsPallet.map((item, index) => (
-                <View
-                  key={index}
-                  className="bg-white p-4 rounded-2xl mb-2 border border-slate-100 flex-row items-center shadow-sm"
-                >
-                  <View className="w-10 h-10 bg-slate-50 rounded-xl items-center justify-center border border-slate-100 mr-4">
-                    <BoxIcon />
-                  </View>
-
-                  <View className="flex-1">
-                    <Text className="font-bold text-slate-800 text-sm">
-                      {item.codigoArt}
-                    </Text>
-
-                    <Text className="text-[10px] text-slate-400 uppercase tracking-tight">
-                      Traza: {item.traza} • {item.peso} KG
-                    </Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          </ScrollView>
           {/* BOTÓN DE CIERRE FIJO */}
-          <View className="p-4 bg-white border-t border-slate-100">
+          <View className="p-4 bg-white border-t border-slate-100 ">
             <Pressable
               disabled={totalBoxes === 0} //activeOpacity={0.8}
               onPress={CerrarPallet}
@@ -482,6 +448,40 @@ const PalletGen = () => {
               <WeightIcon />
             </Pressable>
           </View>
+        </View>
+
+        <View className="flex-[2] gap-5 mt-4 ">
+          <Text className="text-[10px]  font-black uppercase text-slate-400 mb-3 ml-1 tracking-tighter italic">
+            Detalles de carga
+          </Text>
+          <ScrollView
+            className="flex-1"
+            contentContainerStyle={{ paddingBottom: 10 }}
+          >
+            {/* LISTADO DE ITEMS */}
+            <View className="mx-4 mt-2 flex-1">
+              {itemsPallet.map((item, index) => (
+                <View
+                  key={index}
+                  className="bg-white p-4 rounded-2xl mb-2 border border-slate-100 flex-row items-center shadow-sm"
+                >
+                  <View className="w-16 h-16 bg-slate-600 rounded-xl items-center justify-center border border-slate-100 mr-4">
+                    <BoxIcon />
+                  </View>
+
+                  <View className="flex-1">
+                    <Text className="font-bold text-slate-800 ">
+                      {item.codigoArt}
+                    </Text>
+
+                    <Text className="text-[12px] text-slate-400 uppercase tracking-tight">
+                      Traza: {item.traza} • {item.peso} KG
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </ScrollView>
         </View>
       </View>
     </KeyboardAvoidingView>
