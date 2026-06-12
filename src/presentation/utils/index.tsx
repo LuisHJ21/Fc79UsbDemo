@@ -43,6 +43,7 @@ export const ConfirmDialog = (
 };
 
 export const desencriptarQRtext = async (textQr: string) => {
+  console.log(textQr);
   const partes = textQr.split("=");
   const qrEncrypted = partes[0];
 

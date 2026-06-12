@@ -15,7 +15,8 @@ import { ImprimirQR } from "@/core/services/Print.service";
 import { ObtenerTurnoActual } from "@/core/services/Turno.service";
 import { useUsbScanner } from "@/hooks/useUsbScanner";
 import { DataFormPallet } from "@/infraestructure/interfaces";
-import React, { useEffect, useRef, useState } from "react";
+import { Turno } from "@/infraestructure/interfaces/turno.interface";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -23,7 +24,6 @@ import {
   Pressable,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -44,25 +44,22 @@ const PalletGen = () => {
 
   const { statusLog, setScannedCode } = useUsbScanner({
     baudRate: 9600,
-    onCodeScanned: (code) => testLog(code),
+    onCodeScanned: (code) => addItem(code),
   });
+  const [turno, setTurno] = useState<Turno | null>(null);
 
-  // const [turno, setTurno] = useState<Turno | null>(null);
   const [scanInput, setScanInput] = useState("");
   const [itemsPallet, setItemsPallet] = useState<any[]>([]);
   const [cabecera, setCabecera] = useState<any>(null);
-  const [lastScan, setLastScan] = useState<any>(null);
-  const inputRef = useRef<TextInput>(null);
-
+  const [lastScan, setLastScan] = useState<any>(null); //const inputRef = useRef<TextInput>(null);
   const [visibityMdl, setVisibityMdl] = useState(false);
 
   const insets = useSafeAreaInsets();
 
   const changeVisibityMdl = () => {
     setVisibityMdl(!visibityMdl);
-  };
+  }; // Cálculos dinámicos
 
-  // Cálculos dinámicos
   const totalWeight = itemsPallet
     .reduce((acc, item) => acc + parseFloat(item.peso || "0"), 0)
     .toFixed(2);
@@ -86,12 +83,9 @@ const PalletGen = () => {
       codigoArt: "",
       estado: "1",
       detalles: [],
-      observacion: "",
-      //operacion: "save",
+      observacion: "", //operacion: "save",
       usuario: turnoActual?.usuario,
-    };
-
-    // loadingSave();
+    }; // loadingSave();
 
     if (!turnoActual) {
       Alert.alert("ERROR", "No existe turno iniciado");
@@ -117,14 +111,12 @@ const PalletGen = () => {
       () => {
         return;
       },
-    );
-
-    // SwAlert.close();
+    ); // SwAlert.close();
   };
 
   useEffect(() => {
     // Foco automático para PDAs con lector láser
-    setTimeout(() => inputRef.current?.focus(), 500);
+    //  setTimeout(() => inputRef.current?.focus(), 500);
 
     // if (qrRef.current && flagAutoFocus) {
     //   qrRef.current.focus();
@@ -134,6 +126,7 @@ const PalletGen = () => {
       if (!palletCarga) return;
 
       const service = await DetallePallet(palletCarga);
+      console.log("service");
       const detalles = service["detalles"];
       const cabecera = service["cabecera"];
       setCabecera(cabecera || null);
@@ -141,7 +134,7 @@ const PalletGen = () => {
     };
 
     obtenerItemsdb();
-  }, []);
+  }, [palletCarga]);
 
   const testLog = (codigo: string) => {
     console.log(codigo);
@@ -186,18 +179,14 @@ const PalletGen = () => {
       });
 
       if (amp.length === 0) {
-        Alert.alert("NO SE HA ENCONTRADO PROYECCION");
-        /* SwAlert.fire({
+        Alert.alert("NO SE HA ENCONTRADO PROYECCION"); /* SwAlert.fire({
           icon: "warning",
           text: "NO SE HA ENCONTRADO PROYECCION",
           showConfirmButton: false,
           timer: 1500,
-        });*/
-        //setScanInput("");
+        });*/ //setScanInput("");
         return;
-      }
-
-      //const plan = await plandiarioxTraza(detalles["traza"]);
+      } //const plan = await plandiarioxTraza(detalles["traza"]);
 
       const item = {
         ot: detalles["ot"],
@@ -216,9 +205,8 @@ const PalletGen = () => {
         codigoArt: detalles["codigoArt"],
         estado: "1",
         detalles: [item],
-        observacion: "",
-        // operacion: "update",
-        usuario: "",
+        observacion: "", // operacion: "update",
+        usuario: turnoActual?.usuario,
         numPallet: palletCarga,
       };
 
@@ -246,12 +234,10 @@ const PalletGen = () => {
       };
 
       setLastScan(item);
-      setItemsPallet((prev) => [...prev, detalleNew]);
-      //setScanInput("");
+      setItemsPallet((prev) => [...prev, detalleNew]); //setScanInput("");
       //* SwAlert.close();
     } catch (error) {
-      console.log(error);
-      //setScanInput("");
+      console.log(error); //setScanInput("");
       // SwAlert.close();
     }
   };
@@ -261,7 +247,11 @@ const PalletGen = () => {
     ImprimirQR(palletCarga);
   };
 
-  const CerrarPallet = () => {};
+  const CerrarPallet = () => {
+    clearPalletCarga();
+    setItemsPallet([]);
+    setLastScan(null);
+  };
 
   useEffect(() => {
     obtenerTurno();
@@ -274,6 +264,7 @@ const PalletGen = () => {
           visible={visibityMdl}
           changeVisibityMdl={changeVisibityMdl}
         />
+
         <View className="p-5 flex-row gap-2">
           <Pressable
             className="flex-1 flex-col uppercase p-5 bg-blue-600 hover:bg-blue-700 rounded-lg text-white  items-center justify-center gap-2"
@@ -282,6 +273,7 @@ const PalletGen = () => {
             <PalletIcon size={30} />
             <Text className="font-bold text-lg text-white">Generar Pallet</Text>
           </Pressable>
+
           <Pressable
             className=" flex-1 flex-col uppercase p-5 bg-blue-600 hover:bg-blue-700 rounded-lg text-white  items-center justify-center gap-2"
             onPress={changeVisibityMdl}
@@ -306,18 +298,22 @@ const PalletGen = () => {
           <View className="bg-blue-700 w-10 h-10 rounded-xl items-center justify-center border border-blue-700">
             <LayerIcon />
           </View>
+
           <View className="ml-3">
             <Text className=" font-black uppercase tracking-tighter">
               Auto-Carga
             </Text>
+
             <Text className="text-xs font-mono text-slate-400">
               MODO AUTOMÁTICO
             </Text>
           </View>
         </View>
+
         <Text className="text-black text-[10px] font-black uppercase">
           {statusLog}
         </Text>
+
         <Pressable
           className="w-auto flex flex-col bg-blue-600 hover:bg-blue-700 rounded-lg p-3 text-white font-bold"
           onPress={Imprimir}
@@ -349,7 +345,7 @@ const PalletGen = () => {
             </View>
           </View> */}
           {/* CARD LINEA */}
-          <View
+          {/*  <View
             className={`m-4 bg-white p-5 rounded-3xl border ${lastScan ? "border-blue-700" : "border-slate-200  "}`}
           >
             <View className="flex-row justify-between items-center mb-2">
@@ -362,8 +358,7 @@ const PalletGen = () => {
             <View className="flex-row justify-between items-end">
               <Text>Linea 1</Text>
             </View>
-          </View>
-
+          </View> */}
           {/* CARD INFO PRINCIPAL */}
           <View className="m-4 bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
             <View className="flex-row items-center mb-4">
@@ -376,6 +371,7 @@ const PalletGen = () => {
             <Text className="text-[9px] font-bold text-slate-400 uppercase">
               Artículo
             </Text>
+
             <Text className="text-base font-bold text-slate-800 mb-4">
               {articleCode}
             </Text>
@@ -385,23 +381,24 @@ const PalletGen = () => {
                 <Text className="text-[8px] font-bold text-slate-400 uppercase mb-1">
                   Cajas
                 </Text>
+
                 <Text className="text-xl font-black text-blue-700">
                   {totalBoxes}
                 </Text>
               </View>
+
               <View className="flex-1 bg-slate-50 p-3 rounded-2xl border border-slate-100">
                 <Text className="text-[8px] font-bold text-slate-400 uppercase mb-1">
                   Peso Total
                 </Text>
+
                 <Text className="text-xl font-black text-blue-700">
-                  {totalWeight} <Text className="text-xs">KG</Text>
+                  {totalWeight}
+                  <Text className="text-xs">KG</Text>
                 </Text>
               </View>
             </View>
           </View>
-
-          {/* INPUT DE ESCANEO */}
-
           {/* ÚLTIMA CAJA */}
           <View
             className={`m-4 bg-gray-500 p-5 rounded-3xl border ${lastScan ? "border-blue-700" : "border-slate-200  "}`}
@@ -418,14 +415,17 @@ const PalletGen = () => {
                 <Text className="text-[8px] font-bold text-white uppercase">
                   Traza
                 </Text>
+
                 <Text className="text-sm font-bold text-slate-200">
                   {lastScan?.traza || "---"}
                 </Text>
               </View>
+
               <View className="items-end">
                 <Text className="text-[8px] font-bold text-white uppercase">
                   Peso
                 </Text>
+
                 <Text className="text-lg font-black text-slate-200">
                   {lastScan?.peso || "0.00"} KG
                 </Text>
@@ -433,6 +433,7 @@ const PalletGen = () => {
             </View>
           </View>
         </View>
+
         <View className="flex-[2]">
           <ScrollView
             className="flex-1"
@@ -443,6 +444,7 @@ const PalletGen = () => {
               <Text className="text-[10px] font-black uppercase text-slate-400 mb-3 ml-1 tracking-tighter italic">
                 Detalles de carga
               </Text>
+
               {itemsPallet.map((item, index) => (
                 <View
                   key={index}
@@ -451,10 +453,12 @@ const PalletGen = () => {
                   <View className="w-10 h-10 bg-slate-50 rounded-xl items-center justify-center border border-slate-100 mr-4">
                     <BoxIcon />
                   </View>
+
                   <View className="flex-1">
                     <Text className="font-bold text-slate-800 text-sm">
                       {item.codigoArt}
                     </Text>
+
                     <Text className="text-[10px] text-slate-400 uppercase tracking-tight">
                       Traza: {item.traza} • {item.peso} KG
                     </Text>
@@ -466,9 +470,9 @@ const PalletGen = () => {
           {/* BOTÓN DE CIERRE FIJO */}
           <View className="p-4 bg-white border-t border-slate-100">
             <Pressable
-              disabled={totalBoxes === 0}
-              //activeOpacity={0.8}
-              className={`w-full py-5 rounded-2xl flex-row items-center justify-center ${totalBoxes > 0 ? "bg-blue-700 shadow-lg shadow-blue-200" : "bg-slate-300"}`}
+              disabled={totalBoxes === 0} //activeOpacity={0.8}
+              onPress={CerrarPallet}
+              className={`w-full py-5 rounded-2xl flex-row items-center justify-center ${totalBoxes > 0 ? "bg-blue-700 " : "bg-slate-300"}`}
             >
               <Text
                 className={`font-black text-xs uppercase tracking-widest mr-3 ${totalBoxes > 0 ? "text-white" : "text-slate-500"}`}

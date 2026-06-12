@@ -73,6 +73,7 @@ export function useUsbScanner(options?: UseUsbScannerOptions) {
 
         // Listener de eventos
         port.onReceived((event: any) => {
+          console.log(event);
           codigoBufferRef.current += hexToString(event.data);
 
           if (
