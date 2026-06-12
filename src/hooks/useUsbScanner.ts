@@ -42,7 +42,7 @@ export function useUsbScanner(options?: UseUsbScannerOptions) {
       try {
         const devices = await UsbSerialManager.list();
 
-        // console.log(devices);
+        //console.log(devices);
 
         // Manejo de desconexión
         if (!devices || devices.length === 0) {
@@ -73,14 +73,16 @@ export function useUsbScanner(options?: UseUsbScannerOptions) {
 
         // Listener de eventos
         port.onReceived((event: any) => {
-          console.log(event);
           codigoBufferRef.current += hexToString(event.data);
+          console.log(event.data);
 
           /* if (
             codigoBufferRef.current.includes("\n") ||
             codigoBufferRef.current.includes("\r")
           ) */
           if (codigoBufferRef.current.endsWith("\r\n")) {
+            //  if (codigoBufferRef.current.includes("=")) {
+            console.log("entre");
             const codigoCompleto = codigoBufferRef.current
               .replace(/[\r\n]/g, "")
               .trim();
@@ -105,6 +107,7 @@ export function useUsbScanner(options?: UseUsbScannerOptions) {
         setStatusLog("Lector listo para escanear.");
       } catch (error: any) {
         activePortRef.current = null;
+
         setStatusLog(`Error: ${error.message || "Dispositivo no listo"}`);
       } finally {
         isConnectingRef.current = false;

@@ -126,7 +126,7 @@ const PalletGen = () => {
       if (!palletCarga) return;
 
       const service = await DetallePallet(palletCarga);
-      console.log("service");
+
       const detalles = service["detalles"];
       const cabecera = service["cabecera"];
       setCabecera(cabecera || null);
