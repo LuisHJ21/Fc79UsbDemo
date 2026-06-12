@@ -73,16 +73,17 @@ export function useUsbScanner(options?: UseUsbScannerOptions) {
 
         // Listener de eventos
         port.onReceived((event: any) => {
-          // console.log(event);
-          codigoBufferRef.current += event.data;
+          console.log(event);
+          codigoBufferRef.current += hexToString(event.data);
 
-          if (
+          /* if (
             codigoBufferRef.current.includes("\n") ||
             codigoBufferRef.current.includes("\r")
-          ) {
-            const codigoCompleto = hexToString(
-              codigoBufferRef.current.replace(/[\r\n]/g, "").trim(),
-            );
+          ) */
+          if (codigoBufferRef.current.endsWith("\r\n")) {
+            const codigoCompleto = codigoBufferRef.current
+              .replace(/[\r\n]/g, "")
+              .trim();
 
             setScannedCode(codigoCompleto);
             // setStatusLog("Código recibido con éxito.");
