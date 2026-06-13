@@ -1,0 +1,344 @@
+diff --git a/node_modules/@bservan/react-native-usb-serialport-for-android/android/.classpath b/node_modules/@bservan/react-native-usb-serialport-for-android/android/.classpath
+new file mode 100644
+index 0000000..0a3280e
+--- /dev/null
++++ b/node_modules/@bservan/react-native-usb-serialport-for-android/android/.classpath
+@@ -0,0 +1,6 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<classpath>
++	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-21/"/>
++	<classpathentry kind="con" path="org.eclipse.buildship.core.gradleclasspathcontainer"/>
++	<classpathentry kind="output" path="bin/default"/>
++</classpath>
+diff --git a/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/8.9/checksums/checksums.lock b/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/8.9/checksums/checksums.lock
+new file mode 100644
+index 0000000..928089f
+Binary files /dev/null and b/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/8.9/checksums/checksums.lock differ
+diff --git a/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/8.9/checksums/md5-checksums.bin b/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/8.9/checksums/md5-checksums.bin
+new file mode 100644
+index 0000000..68e0a52
+Binary files /dev/null and b/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/8.9/checksums/md5-checksums.bin differ
+diff --git a/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/8.9/checksums/sha1-checksums.bin b/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/8.9/checksums/sha1-checksums.bin
+new file mode 100644
+index 0000000..e7c83c2
+Binary files /dev/null and b/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/8.9/checksums/sha1-checksums.bin differ
+diff --git a/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/8.9/dependencies-accessors/gc.properties b/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/8.9/dependencies-accessors/gc.properties
+new file mode 100644
+index 0000000..e69de29
+diff --git a/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/8.9/fileChanges/last-build.bin b/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/8.9/fileChanges/last-build.bin
+new file mode 100644
+index 0000000..f76dd23
+Binary files /dev/null and b/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/8.9/fileChanges/last-build.bin differ
+diff --git a/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/8.9/fileHashes/fileHashes.lock b/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/8.9/fileHashes/fileHashes.lock
+new file mode 100644
+index 0000000..cef069d
+Binary files /dev/null and b/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/8.9/fileHashes/fileHashes.lock differ
+diff --git a/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/8.9/gc.properties b/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/8.9/gc.properties
+new file mode 100644
+index 0000000..e69de29
+diff --git a/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock b/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock
+new file mode 100644
+index 0000000..7ddcd48
+Binary files /dev/null and b/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock differ
+diff --git a/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/buildOutputCleanup/cache.properties b/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/buildOutputCleanup/cache.properties
+new file mode 100644
+index 0000000..05f15b7
+--- /dev/null
++++ b/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/buildOutputCleanup/cache.properties
+@@ -0,0 +1,2 @@
++#Mon May 18 11:51:43 PET 2026
++gradle.version=8.9
+diff --git a/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/vcs-1/gc.properties b/node_modules/@bservan/react-native-usb-serialport-for-android/android/.gradle/vcs-1/gc.properties
+new file mode 100644
+index 0000000..e69de29
+diff --git a/node_modules/@bservan/react-native-usb-serialport-for-android/android/.project b/node_modules/@bservan/react-native-usb-serialport-for-android/android/.project
+new file mode 100644
+index 0000000..1478350
+--- /dev/null
++++ b/node_modules/@bservan/react-native-usb-serialport-for-android/android/.project
+@@ -0,0 +1,34 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<projectDescription>
++	<name>bservan_react-native-usb-serialport-for-android</name>
++	<comment>Project bservan_react-native-usb-serialport-for-android created by Buildship.</comment>
++	<projects>
++	</projects>
++	<buildSpec>
++		<buildCommand>
++			<name>org.eclipse.jdt.core.javabuilder</name>
++			<arguments>
++			</arguments>
++		</buildCommand>
++		<buildCommand>
++			<name>org.eclipse.buildship.core.gradleprojectbuilder</name>
++			<arguments>
++			</arguments>
++		</buildCommand>
++	</buildSpec>
++	<natures>
++		<nature>org.eclipse.jdt.core.javanature</nature>
++		<nature>org.eclipse.buildship.core.gradleprojectnature</nature>
++	</natures>
++	<filteredResources>
++		<filter>
++			<id>1779123808880</id>
++			<name></name>
++			<type>30</type>
++			<matcher>
++				<id>org.eclipse.core.resources.regexFilterMatcher</id>
++				<arguments>node_modules|\.git|__CREATED_BY_JAVA_LANGUAGE_SERVER__</arguments>
++			</matcher>
++		</filter>
++	</filteredResources>
++</projectDescription>
+diff --git a/node_modules/@bservan/react-native-usb-serialport-for-android/android/.settings/org.eclipse.buildship.core.prefs b/node_modules/@bservan/react-native-usb-serialport-for-android/android/.settings/org.eclipse.buildship.core.prefs
+new file mode 100644
+index 0000000..68c9fab
+--- /dev/null
++++ b/node_modules/@bservan/react-native-usb-serialport-for-android/android/.settings/org.eclipse.buildship.core.prefs
+@@ -0,0 +1,2 @@
++connection.project.dir=../../../../android
++eclipse.preferences.version=1
+diff --git a/node_modules/@bservan/react-native-usb-serialport-for-android/android/build.gradle b/node_modules/@bservan/react-native-usb-serialport-for-android/android/build.gradle
+index a9365ff..c594746 100644
+--- a/node_modules/@bservan/react-native-usb-serialport-for-android/android/build.gradle
++++ b/node_modules/@bservan/react-native-usb-serialport-for-android/android/build.gradle
+@@ -3,7 +3,7 @@ buildscript {
+         repositories {
+             google()
+             mavenCentral()
+-            jcenter()
++           
+         }
+ 
+         dependencies {
+@@ -56,7 +56,7 @@ repositories {
+     maven { url 'https://jitpack.io' }
+     google()
+     mavenCentral()
+-    jcenter()
++ 
+ }
+ 
+ dependencies {
+diff --git a/node_modules/@bservan/react-native-usb-serialport-for-android/android/src/main/java/com/bastengao/usbserialport/UsbSerialportForAndroidModule.java b/node_modules/@bservan/react-native-usb-serialport-for-android/android/src/main/java/com/bastengao/usbserialport/UsbSerialportForAndroidModule.java
+index f6e859b..ef73d4b 100644
+--- a/node_modules/@bservan/react-native-usb-serialport-for-android/android/src/main/java/com/bastengao/usbserialport/UsbSerialportForAndroidModule.java
++++ b/node_modules/@bservan/react-native-usb-serialport-for-android/android/src/main/java/com/bastengao/usbserialport/UsbSerialportForAndroidModule.java
+@@ -1,18 +1,12 @@
+ package com.bastengao.usbserialport;
+ 
+-import android.app.PendingIntent;
+-import android.content.Context;
+-import android.content.Intent;
+-import android.hardware.usb.UsbDevice;
+-import android.hardware.usb.UsbDeviceConnection;
+-import android.hardware.usb.UsbManager;
+-import android.util.Log;
++import java.io.IOException;
++import java.util.Collection;
++import java.util.HashMap;
++import java.util.Map;
+ 
+-import androidx.annotation.NonNull;
++import android.content.Context;
+ 
+-import com.facebook.react.bridge.Arguments;
+-import com.facebook.react.bridge.LifecycleEventListener;
+-import com.facebook.react.bridge.Promise;
+ import com.facebook.react.bridge.ReactApplicationContext;
+ import com.facebook.react.bridge.ReactContextBaseJavaModule;
+ import com.facebook.react.bridge.ReactMethod;
+@@ -23,14 +17,23 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
+ import com.hoho.android.usbserial.driver.UsbSerialDriver;
+ import com.hoho.android.usbserial.driver.UsbSerialPort;
+ import com.hoho.android.usbserial.driver.UsbSerialProber;
++import com.hoho.android.usbserial.driver.ProbeTable;
++import com.hoho.android.usbserial.driver.CdcAcmSerialDriver;
+ 
+-import java.io.IOException;
+-import java.util.Collection;
+-import java.util.HashMap;
+-import java.util.Map;
++import android.app.PendingIntent;
++import android.content.Intent;
++import android.hardware.usb.UsbDevice;
++import android.hardware.usb.UsbDeviceConnection;
++import android.hardware.usb.UsbManager;
++import android.util.Log;
++import androidx.annotation.NonNull;
++import com.facebook.react.bridge.Promise;
++import com.facebook.react.bridge.Arguments;
++import com.facebook.react.bridge.LifecycleEventListener;
+ 
+ @ReactModule(name = UsbSerialportForAndroidModule.NAME)
+-public class UsbSerialportForAndroidModule extends ReactContextBaseJavaModule implements EventSender, LifecycleEventListener {
++public class UsbSerialportForAndroidModule extends ReactContextBaseJavaModule
++        implements EventSender, LifecycleEventListener {
+     public static final String NAME = "UsbSerialportForAndroid";
+     private static final String INTENT_ACTION_GRANT_USB = BuildConfig.LIBRARY_PACKAGE_NAME + ".GRANT_USB";
+ 
+@@ -43,8 +46,32 @@ public class UsbSerialportForAndroidModule extends ReactContextBaseJavaModule im
+     public static final String CODE_SEND_FAILED = "send_failed";
+     public static final String CODE_DEVICE_NOT_OPEN_OR_CLOSED = "device_not_open_or_closed";
+ 
++    private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
++
++    public static byte[] hexStringToByteArray(String s) {
++        int len = s.length();
++        byte[] data = new byte[len / 2];
++        for (int i = 0; i < len; i += 2) {
++            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
++                    + Character.digit(s.charAt(i + 1), 16));
++        }
++        return data;
++    }
++
++    public static String bytesToHex(byte[] bytes) {
++        char[] hexChars = new char[bytes.length * 2];
++        for (int j = 0; j < bytes.length; j++) {
++            int v = bytes[j] & 0xFF;
++            hexChars[j * 2] = HEX_ARRAY[v >>> 4];
++            hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
++        }
++        return new String(hexChars);
++    }
++
+     private final ReactApplicationContext reactContext;
++
+     private final Map<Integer, UsbSerialPortWrapper> usbSerialPorts = new HashMap<Integer, UsbSerialPortWrapper>();
++
+     private final Map<Integer, UsbSerialPortParameters> usbSerialPortParameters = new HashMap<>();
+ 
+     public UsbSerialportForAndroidModule(ReactApplicationContext reactContext) {
+@@ -104,7 +131,8 @@ public class UsbSerialportForAndroidModule extends ReactContextBaseJavaModule im
+             return;
+         }
+ 
+-        PendingIntent usbPermissionIntent = PendingIntent.getBroadcast(getCurrentActivity(), 0, new Intent(INTENT_ACTION_GRANT_USB), PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
++        PendingIntent usbPermissionIntent = PendingIntent.getBroadcast(getCurrentActivity(), 0,
++                new Intent(INTENT_ACTION_GRANT_USB), PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+         usbManager.requestPermission(device, usbPermissionIntent);
+         promise.resolve(0);
+     }
+@@ -137,7 +165,17 @@ public class UsbSerialportForAndroidModule extends ReactContextBaseJavaModule im
+             return;
+         }
+ 
+-        UsbSerialDriver driver = UsbSerialProber.getDefaultProber().probeDevice(device);
++        ProbeTable customTable = UsbSerialProber.getDefaultProbeTable();
++        // FC79
++        customTable.addProduct(0x05E0, 0x1701, CdcAcmSerialDriver.class);
++        // TS100
++        customTable.addProduct(0x2745, 0x300A, CdcAcmSerialDriver.class);
++
++        // UsbSerialDriver driver =
++        // UsbSerialProber.getDefaultProber().probeDevice(device);
++        UsbSerialProber prober = new UsbSerialProber(customTable);
++        UsbSerialDriver driver = prober.probeDevice(device);
++
+         if (driver == null) {
+             promise.reject(CODE_DRIVER_NOT_FOND, "no driver for device");
+             return;
+@@ -148,7 +186,7 @@ public class UsbSerialportForAndroidModule extends ReactContextBaseJavaModule im
+         }
+ 
+         UsbDeviceConnection connection = usbManager.openDevice(driver.getDevice());
+-        if(connection == null) {
++        if (connection == null) {
+             if (!usbManager.hasPermission(driver.getDevice())) {
+                 promise.reject(CODE_PERMISSION_DENIED, "connection failed: permission denied");
+             } else {
+@@ -163,8 +201,9 @@ public class UsbSerialportForAndroidModule extends ReactContextBaseJavaModule im
+             port.setParameters(baudRate, dataBits, stopBits, parity);
+         } catch (IOException e) {
+             try {
+-                 port.close();
+-            } catch (IOException ignored) {}
++                port.close();
++            } catch (IOException ignored) {
++            }
+             promise.reject(CODE_OPEN_FAILED, "connection failed", e);
+             return;
+         }
+@@ -216,44 +255,11 @@ public class UsbSerialportForAndroidModule extends ReactContextBaseJavaModule im
+             @Override
+             public void run() {
+                 reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+-                    .emit(eventName, event);
++                        .emit(eventName, event);
+             }
+         });
+     }
+ 
+-    private UsbDevice findDevice(int deviceId) {
+-        UsbManager usbManager = (UsbManager) getCurrentActivity().getSystemService(Context.USB_SERVICE);
+-        for (UsbDevice device : usbManager.getDeviceList().values()) {
+-            if (device.getDeviceId() == deviceId) {
+-                return device;
+-            }
+-        }
+-
+-        return null;
+-    }
+-
+-    public static byte[] hexStringToByteArray(String s) {
+-        int len = s.length();
+-        byte[] data = new byte[len / 2];
+-        for (int i = 0; i < len; i += 2) {
+-            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+-                + Character.digit(s.charAt(i + 1), 16));
+-        }
+-        return data;
+-    }
+-
+-    private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+-
+-    public static String bytesToHex(byte[] bytes) {
+-        char[] hexChars = new char[bytes.length * 2];
+-        for (int j = 0; j < bytes.length; j++) {
+-            int v = bytes[j] & 0xFF;
+-            hexChars[j * 2] = HEX_ARRAY[v >>> 4];
+-            hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
+-        }
+-        return new String(hexChars);
+-    }
+-
+     @Override
+     public void onHostResume() {
+         if (BuildConfig.LIFECYCLE_AWARE_USB_MODULE_ENABLED) {
+@@ -277,7 +283,7 @@ public class UsbSerialportForAndroidModule extends ReactContextBaseJavaModule im
+                     }
+ 
+                     UsbDeviceConnection connection = usbManager.openDevice(driver.getDevice());
+-                    if(connection == null) {
++                    if (connection == null) {
+                         if (!usbManager.hasPermission(driver.getDevice())) {
+                             Log.e(NAME, "connection failed: permission denied");
+                         } else {
+@@ -296,7 +302,8 @@ public class UsbSerialportForAndroidModule extends ReactContextBaseJavaModule im
+                     } catch (IOException e) {
+                         try {
+                             port.close();
+-                        } catch (IOException ignored) {}
++                        } catch (IOException ignored) {
++                        }
+                         Log.e(NAME, "connection failed", e);
+                         continue;
+                     }
+@@ -341,4 +348,15 @@ public class UsbSerialportForAndroidModule extends ReactContextBaseJavaModule im
+             usbSerialPortParameters.clear();
+         }
+     }
++
++    private UsbDevice findDevice(int deviceId) {
++        UsbManager usbManager = (UsbManager) getCurrentActivity().getSystemService(Context.USB_SERVICE);
++        for (UsbDevice device : usbManager.getDeviceList().values()) {
++            if (device.getDeviceId() == deviceId) {
++                return device;
++            }
++        }
++
++        return null;
++    }
+ }
