@@ -267,14 +267,17 @@ const PalletGen = () => {
 
           return;
         }
+        clearPalletCarga();
+        setItemsPallet([]);
+        setLastScan(null);
       },
       () => {
+        clearPalletCarga();
+        setItemsPallet([]);
+        setLastScan(null);
         return;
       },
     );
-    clearPalletCarga();
-    setItemsPallet([]);
-    setLastScan(null);
   };
 
   useEffect(() => {
