@@ -112,3 +112,29 @@ export const HistorialPalletIncompleto = async (numPallet: string) => {
     return { result: "error", message: message.toString() };
   }
 };
+
+export const UpdateStatePallet = async (numPallet: string, estado: number) => {
+  try {
+    const url = `pallet`;
+    const datos = {
+      operacion: "estadopallet",
+      numPallet: numPallet,
+      estado: estado,
+    };
+    const peticion = await axiosClient.post(url, datos);
+
+    return peticion.data;
+  } catch (error: any) {
+    let message = "";
+
+    if (error.response) {
+      message = error.response.data;
+    } else if (error.request) {
+      message = error.message;
+    } else {
+      message = error;
+    }
+    SetErrorLog(message.toString(), "DEFINIR ESTADO");
+    return { result: "error", message: message.toString() };
+  }
+};

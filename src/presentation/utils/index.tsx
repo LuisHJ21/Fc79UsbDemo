@@ -9,16 +9,16 @@ type formAMP = {
   ot: string;
 };
 
-export const ConfirmDialog = (
+export const ConfirmDialog = async (
   title: string,
   message: string,
-  onConfirm: () => void,
+  onConfirm: () => Promise<void>,
   onCancel?: () => void,
 ) => {
   if (Platform.OS === "web") {
     const confirmed = window.confirm(`${title}\n\n${message}`);
     if (confirmed) {
-      onConfirm();
+      await onConfirm();
     } else {
       if (onCancel) onCancel();
     }

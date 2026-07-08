@@ -39,6 +39,8 @@ export default function MdlPallets({ visible, changeVisibityMdl }: PropsModal) {
 
       setPalletDisp(peticion);
 
+      //console.log(peticion);
+
       // console.log("peticion" + JSON.stringify(peticion));
     } catch (error) {
       console.log("errorDiso:" + error);

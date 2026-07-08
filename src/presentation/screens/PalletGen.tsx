@@ -9,7 +9,11 @@ import {
 } from "@/constants/Icons";
 import { useAutoPalletContext } from "@/core/contexts/AutoPalletContexts";
 import { useConfContext } from "@/core/contexts/ConfContext";
-import { DetallePallet, SavePallet } from "@/core/services/Pallet.service";
+import {
+  DetallePallet,
+  SavePallet,
+  UpdateStatePallet,
+} from "@/core/services/Pallet.service";
 import { plandiarioxTraza } from "@/core/services/PlanDiario.service";
 import { ImprimirQR } from "@/core/services/Print.service";
 import { ObtenerTurnoActual } from "@/core/services/Turno.service";
@@ -247,7 +251,27 @@ const PalletGen = () => {
     ImprimirQR(palletCarga);
   };
 
-  const CerrarPallet = () => {
+  const CerrarPallet = async () => {
+    await ConfirmDialog(
+      "¿PALLET ESTA COMPLETO?",
+      "",
+      async () => {
+        const peticion = await UpdateStatePallet(palletCarga ?? "", 1);
+
+        const { message, result } = peticion;
+
+        if (result === "error") {
+          Alert.alert("ERROR", message);
+
+          console.log(peticion);
+
+          return;
+        }
+      },
+      () => {
+        return;
+      },
+    );
     clearPalletCarga();
     setItemsPallet([]);
     setLastScan(null);
