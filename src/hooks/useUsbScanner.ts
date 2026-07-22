@@ -17,10 +17,18 @@ export interface UseUsbScannerOptions {
   onCodeScanned?: (code: string) => void; // Callback opcional para ejecutar funciones externas directamente
 }
 
+export type UsbScannerStatus =
+  | "iniciando"
+  | "esperando"
+  | "conectando"
+  | "listo"
+  | "error";
+
 export function useUsbScanner(options?: UseUsbScannerOptions) {
   const [statusLog, setStatusLog] = useState<string>(
     "Iniciando sistema USB...",
   );
+  const [statusType, setStatusType] = useState<UsbScannerStatus>("iniciando");
   const [scannedCode, setScannedCode] = useState<string>("");
 
   const activePortRef = useRef<any>(null);
@@ -48,9 +56,11 @@ export function useUsbScanner(options?: UseUsbScannerOptions) {
         if (!devices || devices.length === 0) {
           if (activePortRef.current) {
             setStatusLog("Lector USB desconectado.");
+            setStatusType("esperando");
             activePortRef.current = null;
           } else {
-            setStatusLog("Esperando conexión del lector USB...");
+            setStatusLog("Conecte el lector USB...");
+            setStatusType("esperando");
           }
           return;
         }
@@ -61,6 +71,7 @@ export function useUsbScanner(options?: UseUsbScannerOptions) {
         isConnectingRef.current = true;
         const targetDevice = devices[0];
         setStatusLog("Conectando al lector...");
+        setStatusType("conectando");
 
         await UsbSerialManager.tryRequestPermission(targetDevice.deviceId);
 
@@ -105,10 +116,12 @@ export function useUsbScanner(options?: UseUsbScannerOptions) {
 
         activePortRef.current = port;
         setStatusLog("Lector listo para escanear.");
+        setStatusType("listo");
       } catch (error: any) {
         activePortRef.current = null;
 
         setStatusLog(`Error: ${error.message || "Dispositivo no listo"}`);
+        setStatusType("error");
       } finally {
         isConnectingRef.current = false;
       }
@@ -131,5 +144,6 @@ export function useUsbScanner(options?: UseUsbScannerOptions) {
     scannedCode,
     setScannedCode, // Por si quieres limpiar el input manualmente desde la UI
     statusLog,
+    statusType,
   };
 }

@@ -28,7 +28,7 @@ export const ConfirmDialog = async (
       message,
       [
         {
-          text: "Cancelar",
+          text: "Salir",
           style: "cancel",
           onPress: onCancel,
         },
@@ -106,6 +106,7 @@ export const buscarAMP = async (datos: formAMP) => {
 
     return datosProy;
   }
+
 
   const inputOptions = proyecciones.map((proy: string) => {
     const option = proy.split(",");

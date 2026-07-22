@@ -16,11 +16,12 @@ import {
 } from "@/core/services/Pallet.service";
 import { plandiarioxTraza } from "@/core/services/PlanDiario.service";
 import { ImprimirQR } from "@/core/services/Print.service";
+import { ObtenerTipoProcesoOT } from "@/core/services/Ot.service";
 import { ObtenerTurnoActual } from "@/core/services/Turno.service";
 import { useUsbScanner } from "@/hooks/useUsbScanner";
 import { DataFormPallet } from "@/infraestructure/interfaces";
 import { Turno } from "@/infraestructure/interfaces/turno.interface";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -31,6 +32,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import AppAlert from "../components/AppAlert";
 import MdlPallets from "../components/MdlPallets";
 import {
   buscarAMP,
@@ -46,7 +48,7 @@ const PalletGen = () => {
 
   const { setTurnoActual, turnoActual } = useConfContext();
 
-  const { statusLog, setScannedCode } = useUsbScanner({
+  const { statusLog, statusType, setScannedCode } = useUsbScanner({
     baudRate: 9600,
     onCodeScanned: (code) => addItem(code),
   });
@@ -57,6 +59,16 @@ const PalletGen = () => {
   const [cabecera, setCabecera] = useState<any>(null);
   const [lastScan, setLastScan] = useState<any>(null); //const inputRef = useRef<TextInput>(null);
   const [visibityMdl, setVisibityMdl] = useState(false);
+  const [confirmCerrar, setConfirmCerrar] = useState(false);
+  const [productoEscaneado, setProductoEscaneado] = useState(false);
+  const [productoDuplicado, setProductoDuplicado] = useState<string | null>(
+    null,
+  );
+
+  // Trazas ya registradas en el pallet actual. Se usa un ref (y no itemsPallet)
+  // para bloquear duplicados aunque lleguen dos lecturas seguidas antes de que
+  // el estado se re-renderice.
+  const trazasRegistradas = useRef<Set<string>>(new Set());
 
   const insets = useSafeAreaInsets();
 
@@ -135,6 +147,12 @@ const PalletGen = () => {
       const cabecera = service["cabecera"];
       setCabecera(cabecera || null);
       setItemsPallet(detalles || []);
+
+      trazasRegistradas.current = new Set<string>(
+        (detalles || [])
+          .map((detalle: any) => String(detalle?.traza || "").trim())
+          .filter((traza: string) => traza !== ""),
+      );
     };
 
     obtenerItemsdb();
@@ -152,6 +170,11 @@ const PalletGen = () => {
 
       return;
     }
+
+    // Traza reservada en este intento. Si el registro no llega a completarse se
+    // libera en el finally para que la caja se pueda volver a escanear.
+    let trazaReservada: string | null = null;
+
     try {
       if (!palletCarga) return;
 
@@ -168,6 +191,34 @@ const PalletGen = () => {
       console.log(qrCode);
 
       const detalles = ExtraerData(qrCode);
+
+      const traza = String(detalles["traza"] || "").trim();
+
+      if (traza === "") return;
+
+      // En PROCESO / REEMPAQUE / REPROCESO varias cajas comparten la misma
+      // traza, así que ahí no se puede bloquear el repetido. Solo en EMPAQUE
+      // la traza es única por caja.
+      const tipoProceso = await ObtenerTipoProcesoOT(detalles["ot"]);
+
+      // Si la consulta falla se deja pasar: es preferible un duplicado
+      // corregible a dejar la línea trabada por un problema de red.
+      const bloquearDuplicado =
+        tipoProceso.result === "success" && !tipoProceso.trazaRepetible;
+
+      if (bloquearDuplicado) {
+        // Ya está en el pallet: no se registra de nuevo ni suena
+        if (trazasRegistradas.current.has(traza)) {
+          setProductoDuplicado(traza);
+          return;
+        }
+
+        // Se reserva antes de los await siguientes para que una segunda lectura
+        // de la misma traza no pase mientras el guardado sigue en curso
+        trazasRegistradas.current.add(traza);
+        trazaReservada = traza;
+      }
+
       const verificar = await SearchArticulo(detalles["codigoArt"]);
 
       if (!verificar) {
@@ -239,10 +290,17 @@ const PalletGen = () => {
 
       setLastScan(item);
       setItemsPallet((prev) => [...prev, detalleNew]); //setScanInput("");
+      setProductoEscaneado(true);
+
+      trazaReservada = null; // quedó registrada, la reserva se vuelve definitiva
       //* SwAlert.close();
     } catch (error) {
       console.log(error); //setScanInput("");
       // SwAlert.close();
+    } finally {
+      if (trazaReservada) {
+        trazasRegistradas.current.delete(trazaReservada);
+      }
     }
   };
   const Imprimir = async () => {
@@ -251,33 +309,36 @@ const PalletGen = () => {
     ImprimirQR(palletCarga);
   };
 
-  const CerrarPallet = async () => {
-    await ConfirmDialog(
-      "¿PALLET ESTA COMPLETO?",
-      "",
-      async () => {
-        const peticion = await UpdateStatePallet(palletCarga ?? "", 1);
+  const CerrarPallet = () => {
+    setConfirmCerrar(true);
+  };
 
-        const { message, result } = peticion;
+  const confirmarCerrarPallet = async () => {
+    setConfirmCerrar(false);
 
-        if (result === "error") {
-          Alert.alert("ERROR", message);
+    const peticion = await UpdateStatePallet(palletCarga ?? "", 1);
 
-          console.log(peticion);
+    const { message, result } = peticion;
 
-          return;
-        }
-        clearPalletCarga();
-        setItemsPallet([]);
-        setLastScan(null);
-      },
-      () => {
-        clearPalletCarga();
-        setItemsPallet([]);
-        setLastScan(null);
-        return;
-      },
-    );
+    if (result === "error") {
+      Alert.alert("ERROR", message);
+
+      console.log(peticion);
+
+      return;
+    }
+    clearPalletCarga();
+    setItemsPallet([]);
+    setLastScan(null);
+    trazasRegistradas.current.clear();
+  };
+
+  const cancelarCerrarPallet = () => {
+    setConfirmCerrar(false);
+    clearPalletCarga();
+    setItemsPallet([]);
+    setLastScan(null);
+    trazasRegistradas.current.clear();
   };
 
   useEffect(() => {
@@ -319,6 +380,34 @@ const PalletGen = () => {
       className="flex-1  bg-slate-100 font-sans text-slate-900 flex flex-col"
       style={{ paddingTop: paddingTop, paddingBottom: paddingBottom }}
     >
+      <AppAlert
+        visible={confirmCerrar}
+        type="confirm"
+        title="¿PALLET ESTA COMPLETO?"
+        message="Se cerrará el pallet actual."
+        confirmText="SI"
+        cancelText="NO"
+        onConfirm={confirmarCerrarPallet}
+        onCancel={cancelarCerrarPallet}
+      />
+
+      <AppAlert
+        visible={productoEscaneado}
+        type="success"
+        title="PRODUCTO ESCANEADO"
+        message=""
+        onConfirm={() => setProductoEscaneado(false)}
+      />
+
+      <AppAlert
+        visible={productoDuplicado !== null}
+        type="warning"
+        title="CAJA YA REGISTRADA"
+        message={`La traza ${productoDuplicado} ya fue registrada en este pallet.`}
+        confirmText="OK"
+        onConfirm={() => setProductoDuplicado(null)}
+      />
+
       {/* HEADER NATIVO */}
       <View className="bg-white px-4 border-b border-slate-200 flex-row justify-between items-center py-5">
         <View className="flex-row items-center">
@@ -337,9 +426,31 @@ const PalletGen = () => {
           </View>
         </View>
 
-        <Text className="text-black text-[10px] font-black uppercase">
-          {statusLog}
-        </Text>
+        <View
+          className={`px-3 py-2 rounded-lg ${
+            statusType === "esperando"
+              ? "bg-yellow-400 border border-yellow-500"
+              : statusType === "error"
+                ? "bg-red-100 border border-red-300"
+                : statusType === "listo"
+                  ? "bg-green-100 border border-green-300"
+                  : "bg-slate-100 border border-slate-200"
+          }`}
+        >
+          <Text
+            className={`text-[10px] font-black uppercase ${
+              statusType === "esperando"
+                ? "text-yellow-900"
+                : statusType === "error"
+                  ? "text-red-700"
+                  : statusType === "listo"
+                    ? "text-green-700"
+                    : "text-slate-600"
+            }`}
+          >
+            {statusLog}
+          </Text>
+        </View>
 
         <Pressable
           className="w-auto flex flex-col bg-blue-600 hover:bg-blue-700 rounded-lg p-3 text-white font-bold"
@@ -470,7 +581,7 @@ const PalletGen = () => {
               <Text
                 className={`font-black text-xs uppercase tracking-widest mr-3 ${totalBoxes > 0 ? "text-white" : "text-slate-500"}`}
               >
-                Finalizar Pallet
+                Cerrar Pallet
               </Text>
               <WeightIcon />
             </Pressable>

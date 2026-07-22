@@ -1,3 +1,8 @@
+import {
+  AlertIcon,
+  getAlertColor,
+  getAlertTitle,
+} from "@/constants/Alerts";
 import { AppAlertProps } from "@/infraestructure/interfaces/alert.interface";
 import React, { useEffect } from "react";
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -26,37 +31,9 @@ export default function AppAlert({
     }
   }, [visible, type, onConfirm]);
 
-  const getDefaultTitle = () => {
-    if (title) return title;
+  const getDefaultTitle = () => title ?? getAlertTitle(type);
 
-    switch (type) {
-      case "confirm":
-        return "CONFIRMAR ACCIÓN";
-      case "success":
-        return "¡OPERACIÓN EXITOSA!";
-      case "error":
-        return "ERROR!";
-      case "warning":
-        return "ADVERTENCIA";
-      default:
-        return "";
-    }
-  };
-
-  const getConfirmColor = () => {
-    switch (type) {
-      case "confirm":
-        return "#3B82F6";
-      case "success":
-        return "#16a34a";
-      case "error":
-        return "#dc2626";
-      case "warning":
-        return "#f59e0b";
-      default:
-        return "#1e5bd8";
-    }
-  };
+  const getConfirmColor = () => getAlertColor(type);
 
   return (
     <Modal
@@ -68,7 +45,9 @@ export default function AppAlert({
     >
       <View style={styles.overlay}>
         <View style={styles.card}>
-          {icon && <View style={{ marginBottom: 15 }}>{icon}</View>}
+          <View style={{ marginBottom: 15 }}>
+            {icon ?? <AlertIcon type={type} />}
+          </View>
 
           <Text style={styles.title}>{getDefaultTitle()}</Text>
 

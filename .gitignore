@@ -41,3 +41,11 @@ app-example
 # generated native folders
 /ios
 /android
+
+# Omitir archivos markdown
+*.md
+
+*.zip
+*.rar
+*.7z
+*.tar
