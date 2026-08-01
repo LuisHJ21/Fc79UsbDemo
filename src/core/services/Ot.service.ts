@@ -8,12 +8,16 @@ type formAMP = {
 
 export type TipoProcesoOT = {
   result: string;
-  codProceso?: string;
+  /* OT_TIPO de TRAZA_PROCESO: 'OPPR' | 'OPRE' | 'OPRP', o '' si no esta */
+  otTipo?: string;
   descripcion?: string;
   /*
-   * true  => PROCESO / REEMPAQUE / REPROCESO: la misma traza cubre varias
-   *          cajas, no se debe bloquear como duplicado.
-   * false => EMPAQUE: la traza es unica por caja.
+   * Sale del OT_TIPO de TRAZA_PROCESO segun la OT del QR:
+   *     OPPR  PROCESO     -> true,  la misma traza cubre varias cajas
+   *     OPRE  REEMPAQUE   -> false, traza unica por caja
+   *     OPRP  REPROCESO   -> false, traza unica por caja
+   * El empaque es parte del proceso, no es una categoria aparte.
+   * Estar en TRAZA_PROCESO no implica traza repetible: solo OPPR.
    */
   trazaRepetible?: boolean;
   message?: string;

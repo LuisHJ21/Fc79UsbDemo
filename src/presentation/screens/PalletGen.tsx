@@ -9,6 +9,7 @@ import {
 } from "@/constants/Icons";
 import { useAutoPalletContext } from "@/core/contexts/AutoPalletContexts";
 import { useConfContext } from "@/core/contexts/ConfContext";
+import { ObtenerTipoProcesoOT } from "@/core/services/Ot.service";
 import {
   DetallePallet,
   SavePallet,
@@ -16,7 +17,6 @@ import {
 } from "@/core/services/Pallet.service";
 import { plandiarioxTraza } from "@/core/services/PlanDiario.service";
 import { ImprimirQR } from "@/core/services/Print.service";
-import { ObtenerTipoProcesoOT } from "@/core/services/Ot.service";
 import { ObtenerTurnoActual } from "@/core/services/Turno.service";
 import { useUsbScanner } from "@/hooks/useUsbScanner";
 import { DataFormPallet } from "@/infraestructure/interfaces";
@@ -64,10 +64,8 @@ const PalletGen = () => {
   const [productoDuplicado, setProductoDuplicado] = useState<string | null>(
     null,
   );
-
-  // Trazas ya registradas en el pallet actual. Se usa un ref (y no itemsPallet)
-  // para bloquear duplicados aunque lleguen dos lecturas seguidas antes de que
-  // el estado se re-renderice.
+  // ----------------------------  EVITAR DUPLICIDAD DE QR ESCANEADOS -----------------------------------
+  // Se usa un ref (no itemsPallet) para bloquear duplicados aunque lleguen dos lecturas seguidas antes de que el estado se re-renderice.
   const trazasRegistradas = useRef<Set<string>>(new Set());
 
   const insets = useSafeAreaInsets();
@@ -196,9 +194,9 @@ const PalletGen = () => {
 
       if (traza === "") return;
 
-      // En PROCESO / REEMPAQUE / REPROCESO varias cajas comparten la misma
-      // traza, así que ahí no se puede bloquear el repetido. Solo en EMPAQUE
-      // la traza es única por caja.
+      // Solo en PROCESO varias cajas comparten la misma traza, así que ahí no
+      // se puede bloquear el repetido. En reempaque y reproceso la traza es
+      // única por caja y sí se bloquea.
       const tipoProceso = await ObtenerTipoProcesoOT(detalles["ot"]);
 
       // Si la consulta falla se deja pasar: es preferible un duplicado
@@ -359,7 +357,9 @@ const PalletGen = () => {
             onPress={crearPallet}
           >
             <PalletIcon size={30} />
-            <Text className="font-bold text-lg text-white">Generar Pallet</Text>
+            <Text className="font-bold text-3xl text-white">
+              Generar Pallet
+            </Text>
           </Pressable>
 
           <Pressable
@@ -367,7 +367,7 @@ const PalletGen = () => {
             onPress={changeVisibityMdl}
           >
             <SearchIcon size={30} />
-            <Text className="font-bold text-lg text-white">Buscar Pallet</Text>
+            <Text className="font-bold text-3xl text-white">Buscar Pallet</Text>
           </Pressable>
         </View>
       </View>
@@ -506,31 +506,31 @@ const PalletGen = () => {
               </Text>
             </View>
 
-            <Text className="text-[9px] font-bold text-slate-400 uppercase">
+            <Text className="text-[13px] font-bold text-slate-400 uppercase">
               Artículo
             </Text>
 
-            <Text className="text-base font-bold text-slate-800 mb-4">
+            <Text className="text-3xl font-bold text-slate-800 mb-4">
               {articleCode}
             </Text>
 
             <View className="flex-row gap-3">
               <View className="flex-1 bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                <Text className="text-[8px] font-bold text-slate-400 uppercase mb-1">
+                <Text className="text-[13px] font-bold text-slate-600 uppercase mb-1">
                   Cajas
                 </Text>
 
-                <Text className="text-xl font-black text-blue-700">
+                <Text className="text-3xl font-black text-blue-700">
                   {totalBoxes}
                 </Text>
               </View>
 
               <View className="flex-1 bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                <Text className="text-[8px] font-bold text-slate-400 uppercase mb-1">
+                <Text className="text-[13px] font-bold text-slate-600 uppercase mb-1">
                   Peso Total
                 </Text>
 
-                <Text className="text-xl font-black text-blue-700">
+                <Text className="text-3xl font-black text-blue-700">
                   {totalWeight}
                   <Text className="text-xs">KG</Text>
                 </Text>
@@ -542,7 +542,7 @@ const PalletGen = () => {
             className={`m-4 bg-gray-500 p-5 rounded-3xl border ${lastScan ? "border-blue-700" : "border-slate-200  "}`}
           >
             <View className="flex-row justify-between items-center mb-2">
-              <Text className=" font-black uppercase text-white tracking-widest">
+              <Text className=" text-[18px] font-black uppercase  text-white tracking-widest">
                 Última Lectura
               </Text>
               <ClockIcon />
@@ -550,7 +550,7 @@ const PalletGen = () => {
 
             <View className="flex-row justify-between items-end">
               <View>
-                <Text className="text-[8px] font-bold text-white uppercase">
+                <Text className="text-[15px] font-bold text-white uppercase">
                   Traza
                 </Text>
 
@@ -560,7 +560,7 @@ const PalletGen = () => {
               </View>
 
               <View className="items-end">
-                <Text className="text-[8px] font-bold text-white uppercase">
+                <Text className="text-[15px] font-bold text-white uppercase">
                   Peso
                 </Text>
 
@@ -579,7 +579,7 @@ const PalletGen = () => {
               className={`w-full py-5 rounded-2xl flex-row items-center justify-center ${totalBoxes > 0 ? "bg-blue-700 " : "bg-slate-300"}`}
             >
               <Text
-                className={`font-black text-xs uppercase tracking-widest mr-3 ${totalBoxes > 0 ? "text-white" : "text-slate-500"}`}
+                className={`font-black text-xs uppercase tracking-widest mr-3 ${totalBoxes > 0 ? "text-white" : "text-slate-600"}`}
               >
                 Cerrar Pallet
               </Text>
@@ -589,7 +589,7 @@ const PalletGen = () => {
         </View>
 
         <View className="flex-[2] gap-5 mt-4 ">
-          <Text className="text-[10px]  font-black uppercase text-slate-400 mb-3 ml-1 tracking-tighter italic">
+          <Text className="text-[14px]  font-black uppercase text-slate-400 mb-3 ml-1 tracking-tighter italic">
             Detalles de carga
           </Text>
           <ScrollView
@@ -608,11 +608,11 @@ const PalletGen = () => {
                   </View>
 
                   <View className="flex-1">
-                    <Text className="font-bold text-slate-800 ">
+                    <Text className="font-bold text-[15px] text-slate-800 ">
                       {item.codigoArt}
                     </Text>
 
-                    <Text className="text-[12px] text-slate-400 uppercase tracking-tight">
+                    <Text className="text-[15px] text-slate-600 uppercase tracking-tight">
                       Traza: {item.traza} • {item.peso} KG
                     </Text>
                   </View>

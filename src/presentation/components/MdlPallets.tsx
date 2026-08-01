@@ -103,8 +103,9 @@ export default function MdlPallets({ visible, changeVisibityMdl }: PropsModal) {
                 value={searchPallet}
                 onChangeText={setSearchPallet}
                 placeholder="BUSCAR PALLET"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor="#65696f"
                 maxLength={10}
+                style={{ fontSize: 14 }}
               />
             </View>
 
@@ -130,15 +131,15 @@ export default function MdlPallets({ visible, changeVisibityMdl }: PropsModal) {
                   </View>
 
                   <View className="flex-[3]">
-                    <Text className="font-bold text-base text-black">
+                    <Text className="font-bold text-xl text-black">
                       {item.NUM_PALLET}
                     </Text>
 
-                    <Text className="text-sm text-gray-600">
+                    <Text className="text-lg text-gray-600">
                       N° bultos: {item.NUM_BULTO}
                     </Text>
 
-                    <Text className="text-sm text-gray-600">
+                    <Text className="text-lg text-gray-600">
                       Peso: {item.PESO}
                     </Text>
                   </View>

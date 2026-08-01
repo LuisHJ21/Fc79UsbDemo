@@ -40,7 +40,6 @@ app-example
 
 # generated native folders
 /ios
-/android
 
 # Omitir archivos markdown
 *.md

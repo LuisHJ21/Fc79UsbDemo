@@ -2,7 +2,7 @@
   "expo": {
     "name": "PALLET AUTO",
     "slug": "Fc79UsbDemo",
-    "version": "1.0.0",
+    "version": "1.0.3",
     "orientation": "landscape",
     "icon": "./assets/icons/escaner.png",
     "scheme": "fc79usbdemo",
@@ -16,7 +16,11 @@
         "foregroundImage": "./assets/icons/escaner-foreground.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.luis21hj.Fc79UsbDemo"
+      "package": "com.luis21hj.Fc79UsbDemo",
+      "versionCode": 4,
+      "permissions": [
+        "android.permission.REQUEST_INSTALL_PACKAGES"
+      ]
     },
     "web": {
       "output": "static",
@@ -43,7 +47,8 @@
         }
       ],
       "expo-font",
-      "expo-image"
+      "expo-image",
+      "./plugins/withReleaseAutoPublish"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -55,9 +60,7 @@
         "projectId": "bf57bf70-42aa-47ca-b138-b87e55094a6d"
       }
     },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.3",
     "updates": {
       "url": "https://u.expo.dev/bf57bf70-42aa-47ca-b138-b87e55094a6d"
     }
