@@ -1,5 +1,6 @@
 import {
   BoxIcon,
+  ChevronLeftIcon,
   ClockIcon,
   LayerIcon,
   PalletIcon,
@@ -80,6 +81,13 @@ const PalletGen = () => {
   const totalBoxes = itemsPallet.length;
   const articleCode =
     itemsPallet.length > 0 ? itemsPallet[0].codigoArt : "----";
+
+  // itemsPallet se mantiene en orden de escaneo; el listado se muestra invertido
+  // para que la última caja leída quede arriba. Se conserva el índice original
+  // para que la key sea estable y no se remonte la lista en cada lectura.
+  const itemsMostrados = itemsPallet
+    .map((item, index) => ({ item, index }))
+    .reverse();
 
   const paddingTop = insets.top;
   const paddingBottom = insets.bottom;
@@ -331,8 +339,13 @@ const PalletGen = () => {
     trazasRegistradas.current.clear();
   };
 
+  //  ---- CAMBIO (PERMITE CANCELAR EL CIERRE DEL PALET Y SEGUIR EN LA MISMA VISTA)
   const cancelarCerrarPallet = () => {
     setConfirmCerrar(false);
+  };
+
+  // ----RETROCEDER
+  const volverAtras = () => {
     clearPalletCarga();
     setItemsPallet([]);
     setLastScan(null);
@@ -411,6 +424,13 @@ const PalletGen = () => {
       {/* HEADER NATIVO */}
       <View className="bg-white px-4 border-b border-slate-200 flex-row justify-between items-center py-5">
         <View className="flex-row items-center">
+          <Pressable
+            onPress={volverAtras}
+            className="w-16 h-16 mr-4 rounded-2xl items-center justify-center bg-slate-100 border border-slate-300"
+          >
+            <ChevronLeftIcon color="#334155" size={44} />
+          </Pressable>
+
           <View className="bg-blue-700 w-10 h-10 rounded-xl items-center justify-center border border-blue-700">
             <LayerIcon />
           </View>
@@ -510,7 +530,7 @@ const PalletGen = () => {
               Artículo
             </Text>
 
-            <Text className="text-3xl font-bold text-slate-800 mb-4">
+            <Text className="text-2xl font-bold text-slate-450 mb-4">
               {articleCode}
             </Text>
 
@@ -520,7 +540,7 @@ const PalletGen = () => {
                   Cajas
                 </Text>
 
-                <Text className="text-3xl font-black text-blue-700">
+                <Text className="text-2xl font-black text-blue-700">
                   {totalBoxes}
                 </Text>
               </View>
@@ -530,7 +550,7 @@ const PalletGen = () => {
                   Peso Total
                 </Text>
 
-                <Text className="text-3xl font-black text-blue-700">
+                <Text className="text-2xl font-black text-blue-700">
                   {totalWeight}
                   <Text className="text-xs">KG</Text>
                 </Text>
@@ -550,11 +570,11 @@ const PalletGen = () => {
 
             <View className="flex-row justify-between items-end">
               <View>
-                <Text className="text-[15px] font-bold text-white uppercase">
+                <Text className="text-[18px] font-bold text-white uppercase">
                   Traza
                 </Text>
 
-                <Text className="text-sm font-bold text-slate-200">
+                <Text className="text-sm font-bold text-slate-100">
                   {lastScan?.traza || "---"}
                 </Text>
               </View>
@@ -596,11 +616,11 @@ const PalletGen = () => {
             className="flex-1"
             contentContainerStyle={{ paddingBottom: 10 }}
           >
-            {/* LISTADO DE ITEMS */}
+            {/* LISTADO DE ITEMS (el último escaneado va primero) */}
             <View className="mx-4 mt-2 flex-1">
-              {itemsPallet.map((item, index) => (
+              {itemsMostrados.map(({ item, index }) => (
                 <View
-                  key={index}
+                  key={`${item.traza}-${index}`}
                   className="bg-white p-4 rounded-2xl mb-2 border border-slate-100 flex-row items-center shadow-sm"
                 >
                   <View className="w-16 h-16 bg-slate-600 rounded-xl items-center justify-center border border-slate-100 mr-4">

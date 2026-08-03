@@ -55,6 +55,14 @@ export const ChevronUpIcon = ({ color, size }: IconProps) => (
   />
 );
 
+export const ChevronLeftIcon = ({ color, size }: IconProps) => (
+  <MaterialCommunityIcons
+    name="chevron-left"
+    size={size ?? 24}
+    color={color ?? "white"}
+  />
+);
+
 export const ChevronRightIcon = ({ color, size }: IconProps) => (
   <MaterialCommunityIcons
     name="chevron-right"
