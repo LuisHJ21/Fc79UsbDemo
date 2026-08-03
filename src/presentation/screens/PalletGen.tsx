@@ -43,6 +43,24 @@ import {
   SearchArticulo,
 } from "../utils";
 
+//--- FECHA PRODUCCION
+const obtenerFechaProd = (item: any): string => {
+  const valor =
+    item?.fechaProd ??
+    item?.fechaprod ??
+    item?.fecha_prod ??
+    item?.fechaProduccion ??
+    "";
+
+  const texto = String(valor).trim();
+  if (texto === "") return "---";
+
+  //--- FECHA PRODUCCION FORMATO
+  const iso = texto.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
+  return texto;
+};
+
 const PalletGen = () => {
   const { cargando, palletCarga, setPalletCarga, clearPalletCarga } =
     useAutoPalletContext();
@@ -618,13 +636,56 @@ const PalletGen = () => {
                     <BoxIcon />
                   </View>
 
-                  <View className="flex-1">
-                    <Text className="font-bold text-[15px] text-slate-800 ">
-                      {item.codigoArt}
+                  {/* FILA DE 4 COLUMNAS */}
+                  <View className="flex-1 pr-2">
+                    <Text className="text-[13px] font-black uppercase text-slate-400 tracking-widest">
+                      Artículo
                     </Text>
 
-                    <Text className="text-[15px] text-slate-600 uppercase tracking-tight">
-                      Traza: {item.traza} • {item.peso} KG
+                    <Text
+                      numberOfLines={1}
+                      className="text-[18px] font-bold text-slate-800"
+                    >
+                      {item.codigoArt}
+                    </Text>
+                  </View>
+
+                  <View className="flex-1 px-2 border-l border-slate-100">
+                    <Text className="text-[13px] font-black uppercase text-slate-400 tracking-widest">
+                      Traza
+                    </Text>
+
+                    <Text
+                      numberOfLines={1}
+                      className="text-[18px] font-bold text-slate-800"
+                    >
+                      {item.traza}
+                    </Text>
+                  </View>
+
+                  <View className="flex-1 px-2 border-l border-slate-100">
+                    <Text className="text-[13px] font-black uppercase text-slate-400 tracking-widest">
+                      F. Producción
+                    </Text>
+
+                    <Text
+                      numberOfLines={1}
+                      className="text-[18px] font-bold text-slate-800"
+                    >
+                      {obtenerFechaProd(item)}
+                    </Text>
+                  </View>
+
+                  <View className="flex-1 pl-2 border-l border-slate-100">
+                    <Text className="text-[13px] font-black uppercase text-slate-400 tracking-widest">
+                      Peso
+                    </Text>
+
+                    <Text
+                      numberOfLines={1}
+                      className="text-[18px] font-bold text-slate-800"
+                    >
+                      {item.peso} KG
                     </Text>
                   </View>
                 </View>
