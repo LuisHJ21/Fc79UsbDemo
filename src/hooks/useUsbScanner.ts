@@ -15,7 +15,10 @@ const hexToString = (hexString: string): string => {
 export interface UseUsbScannerOptions {
   baudRate?: number;
   onCodeScanned?: (code: string) => void; // Callback opcional para ejecutar funciones externas directamente
+  scanCooldownMs?: number; // Tiempo mínimo entre una lectura y la siguiente
 }
+
+const DEFAULT_SCAN_COOLDOWN_MS = 3000;
 
 export type UsbScannerStatus =
   | "iniciando"
@@ -34,6 +37,31 @@ export function useUsbScanner(options?: UseUsbScannerOptions) {
   const activePortRef = useRef<any>(null);
   const isConnectingRef = useRef<boolean>(false);
   const codigoBufferRef = useRef<string>("");
+
+  // Momento de la última lectura aceptada: las que lleguen antes de que se
+  // cumpla el cooldown se descartan (el lector suele disparar varias seguidas).
+  const ultimaLecturaRef = useRef<number>(0);
+  const cooldownTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const cooldownMs = options?.scanCooldownMs ?? DEFAULT_SCAN_COOLDOWN_MS;
+  const cooldownMsRef = useRef(cooldownMs);
+  useEffect(() => {
+    cooldownMsRef.current = cooldownMs;
+  }, [cooldownMs]);
+
+  // Devuelve el estado a "listo" cuando termina la espera entre lecturas
+  const programarFinCooldown = (ms: number) => {
+    if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
+
+    cooldownTimerRef.current = setTimeout(() => {
+      cooldownTimerRef.current = null;
+
+      if (activePortRef.current) {
+        setStatusLog("Lector listo para escanear.");
+        setStatusType("listo");
+      }
+    }, ms);
+  };
 
   // Usamos un ref para el callback para evitar que cambios en la función reinicien el efecto principal
   const onCodeScannedRef = useRef(options?.onCodeScanned);
@@ -98,6 +126,30 @@ export function useUsbScanner(options?: UseUsbScannerOptions) {
               .replace(/[\r\n]/g, "")
               .trim();
 
+            codigoBufferRef.current = "";
+
+            // Cooldown entre código y código: se ignora la lectura completa
+            const ahora = Date.now();
+            const transcurrido = ahora - ultimaLecturaRef.current;
+
+            if (transcurrido < cooldownMsRef.current) {
+              const restante = cooldownMsRef.current - transcurrido;
+              setStatusLog(
+                `Espere ${Math.ceil(restante / 1000)}s para escanear...`,
+              );
+              setStatusType("esperando");
+              programarFinCooldown(restante);
+              return;
+            }
+
+            ultimaLecturaRef.current = ahora;
+
+            setStatusLog(
+              `Espere ${Math.ceil(cooldownMsRef.current / 1000)}s restantes para escanear otro código`,
+            );
+            setStatusType("esperando");
+            programarFinCooldown(cooldownMsRef.current);
+
             setScannedCode(codigoCompleto);
             // setStatusLog("Código recibido con éxito.");
             console.log(codigoCompleto);
@@ -109,8 +161,6 @@ export function useUsbScanner(options?: UseUsbScannerOptions) {
                 console.error(error);
               }
             }
-
-            codigoBufferRef.current = "";
           }
         });
 
@@ -132,6 +182,7 @@ export function useUsbScanner(options?: UseUsbScannerOptions) {
 
     return () => {
       clearInterval(connectionCheckInterval);
+      if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
       if (activePortRef.current) {
         try {
           activePortRef.current.close();

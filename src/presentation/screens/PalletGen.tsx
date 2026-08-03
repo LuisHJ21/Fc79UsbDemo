@@ -51,6 +51,7 @@ const PalletGen = () => {
 
   const { statusLog, statusType, setScannedCode } = useUsbScanner({
     baudRate: 9600,
+    scanCooldownMs: 2000, //TIEMPO DE DEMORA DE LECTURA ENTRE CODIGOS
     onCodeScanned: (code) => addItem(code),
   });
   const [turno, setTurno] = useState<Turno | null>(null);
