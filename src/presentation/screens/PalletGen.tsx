@@ -81,10 +81,6 @@ const PalletGen = () => {
   const totalBoxes = itemsPallet.length;
   const articleCode =
     itemsPallet.length > 0 ? itemsPallet[0].codigoArt : "----";
-
-  // itemsPallet se mantiene en orden de escaneo; el listado se muestra invertido
-  // para que la última caja leída quede arriba. Se conserva el índice original
-  // para que la key sea estable y no se remonte la lista en cada lectura.
   const itemsMostrados = itemsPallet
     .map((item, index) => ({ item, index }))
     .reverse();
@@ -203,24 +199,18 @@ const PalletGen = () => {
       if (traza === "") return;
 
       // Solo en PROCESO varias cajas comparten la misma traza, así que ahí no
-      // se puede bloquear el repetido. En reempaque y reproceso la traza es
-      // única por caja y sí se bloquea.
       const tipoProceso = await ObtenerTipoProcesoOT(detalles["ot"]);
 
-      // Si la consulta falla se deja pasar: es preferible un duplicado
-      // corregible a dejar la línea trabada por un problema de red.
+      // Si la consulta falla se deja pasar: es preferible un duplicado corregible a dejar la línea trabada por un problema de red.
       const bloquearDuplicado =
         tipoProceso.result === "success" && !tipoProceso.trazaRepetible;
 
       if (bloquearDuplicado) {
-        // Ya está en el pallet: no se registra de nuevo ni suena
         if (trazasRegistradas.current.has(traza)) {
           setProductoDuplicado(traza);
           return;
         }
 
-        // Se reserva antes de los await siguientes para que una segunda lectura
-        // de la misma traza no pase mientras el guardado sigue en curso
         trazasRegistradas.current.add(traza);
         trazaReservada = traza;
       }
