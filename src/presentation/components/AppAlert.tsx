@@ -1,8 +1,4 @@
-import {
-  AlertIcon,
-  getAlertColor,
-  getAlertTitle,
-} from "@/constants/Alerts";
+import { AlertIcon, getAlertColor, getAlertTitle } from "@/constants/Alerts";
 import { AppAlertProps } from "@/infraestructure/interfaces/alert.interface";
 import React, { useEffect } from "react";
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";

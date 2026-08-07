@@ -16,7 +16,10 @@ import {
   SavePallet,
   UpdateStatePallet,
 } from "@/core/services/Pallet.service";
-import { plandiarioxTraza } from "@/core/services/PlanDiario.service";
+import {
+  fechaProduccionxTraza,
+  plandiarioxTraza,
+} from "@/core/services/PlanDiario.service";
 import { ImprimirQR } from "@/core/services/Print.service";
 import { ObtenerTurnoActual } from "@/core/services/Turno.service";
 import { useUsbScanner } from "@/hooks/useUsbScanner";
@@ -85,14 +88,14 @@ const PalletGen = () => {
     null,
   );
   // ----------------------------  EVITAR DUPLICIDAD DE QR ESCANEADOS -----------------------------------
-  // Se usa un ref (no itemsPallet) para bloquear duplicados aunque lleguen dos lecturas seguidas antes de que el estado se re-renderice.
+  //--- BLOQUEAR TRAZAS DUPLICADAS
   const trazasRegistradas = useRef<Set<string>>(new Set());
 
   const insets = useSafeAreaInsets();
 
   const changeVisibityMdl = () => {
     setVisibityMdl(!visibityMdl);
-  }; // Cálculos dinámicos
+  };
 
   const totalWeight = itemsPallet
     .reduce((acc, item) => acc + parseFloat(item.peso || "0"), 0)
@@ -191,9 +194,7 @@ const PalletGen = () => {
 
       return;
     }
-
-    // Traza reservada en este intento. Si el registro no llega a completarse se
-    // libera en el finally para que la caja se pueda volver a escanear.
+    // ---- TRAZA RESERVADA (EN CASO DE ERROR PERMITE REINTENTAR)
     let trazaReservada: string | null = null;
 
     try {
@@ -217,10 +218,8 @@ const PalletGen = () => {
 
       if (traza === "") return;
 
-      // Solo en PROCESO varias cajas comparten la misma traza, así que ahí no
+      // SE REPITE SOLO EN PROCESO
       const tipoProceso = await ObtenerTipoProcesoOT(detalles["ot"]);
-
-      // Si la consulta falla se deja pasar: es preferible un duplicado corregible a dejar la línea trabada por un problema de red.
       const bloquearDuplicado =
         tipoProceso.result === "success" && !tipoProceso.trazaRepetible;
 
@@ -243,6 +242,12 @@ const PalletGen = () => {
 
       const plan = await plandiarioxTraza(detalles["traza"]);
 
+      //--- FECHA PRODUCCION: MANDA LA ASIGNADA A LA TRAZA, NO LA DEL QR
+      // (ALGUNAS ETIQUETAS TRAEN LA FECHA DEL PLAN EN ESE CAMPO)
+      const fechaProdTraza = await fechaProduccionxTraza(traza);
+      const fechaProd =
+        fechaProdTraza !== "" ? fechaProdTraza : detalles["fechaProd"];
+
       const amp = await buscarAMP({
         codigoArt: detalles["codigoArt"],
         ot: detalles["ot"],
@@ -260,7 +265,7 @@ const PalletGen = () => {
 
       const item = {
         ot: detalles["ot"],
-        fechaProd: detalles["fechaProd"],
+        fechaProd: fechaProd,
         traza: detalles["traza"],
         lote: detalles["lote"],
         bultos: "1",
