@@ -4,17 +4,10 @@ const { spawnSync } = require("child_process");
 
 // Ruta raiz del proyecto Expo.
 const PROJECT_ROOT = path.resolve(__dirname, "..");
-
-// Backend IIS que sirve el endpoint /pallets/api/version y la carpeta updates.
 const DEFAULT_BACKEND_ROOT = "D:\\WEBSITES\\Pallets\\API";
-
-// Nombre base del APK publicado: pallet-vX.X.X.apk
 const APK_PREFIX = "pallet";
-
-// Ruta HTTP (no ruta Windows) desde donde IIS sirve los APK.
 const DOWNLOAD_BASE = "/pallets/api/updates";
 
-// APK que genera Gradle cuando se ejecuta assembleRelease.
 const APK_SOURCE = path.join(
   PROJECT_ROOT,
   "android",
@@ -27,7 +20,6 @@ const APK_SOURCE = path.join(
 );
 
 function parseArgs(argv) {
-  // Valores por defecto. Se pueden cambiar pasando flags por consola.
   const args = {
     mandatory: false,
     changes: [],
@@ -37,6 +29,7 @@ function parseArgs(argv) {
     updateBackend: true,
     auto: false,
     bump: false,
+    sync: false,
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -44,11 +37,11 @@ function parseArgs(argv) {
     const next = argv[i + 1];
 
     if (arg === "--auto") {
-      // Modo autonomo: lo invoca Gradle al terminar assembleRelease.
       args.auto = true;
     } else if (arg === "--bump") {
-      // Sube version y versionCode para el proximo build.
       args.bump = true;
+    } else if (arg === "--sync") {
+      args.sync = true;
     } else if (arg === "--version") {
       args.version = next;
       i += 1;
@@ -95,7 +88,10 @@ Opciones:
   --auto                  Modo autonomo (lo usa Gradle). Publica la version
                           que esta en app.json: copia el APK y actualiza el JSON.
   --bump                  Sube versionCode +1 y el patch de version en
-                          app.json/package.json (lo usa Gradle tras el build).
+                          app.json/package.json/build.gradle (lo usa Gradle
+                          tras el build).
+  --sync                  Copia version/versionCode de app.json a
+                          android/app/build.gradle sin bumpear nada.
 
 Ejemplo completo:
   npm run release:apk -- --version 1.0.3 --code 3 --change "Correccion de escaneo" --build --copy-apk
@@ -110,7 +106,9 @@ function assertValidArgs(args) {
     );
   }
   if (!Number.isInteger(args.code) || args.code <= 0) {
-    throw new Error("Debes indicar --code como numero positivo. Ejemplo: --code 3");
+    throw new Error(
+      "Debes indicar --code como numero positivo. Ejemplo: --code 3",
+    );
   }
 }
 
@@ -122,24 +120,44 @@ function writeJson(filePath, data) {
   fs.writeFileSync(filePath, `${JSON.stringify(data, null, 2)}\n`, "utf8");
 }
 
+const APP_BUILD_GRADLE = path.join(
+  PROJECT_ROOT,
+  "android",
+  "app",
+  "build.gradle",
+);
+
+function updateAndroidGradleVersion(version, code) {
+  if (!fs.existsSync(APP_BUILD_GRADLE)) return false;
+
+  const original = fs.readFileSync(APP_BUILD_GRADLE, "utf8");
+
+  let updated = original.replace(/versionCode\s+\d+/, `versionCode ${code}`);
+  updated = updated.replace(
+    /versionName\s+"[^"]*"/,
+    `versionName "${version}"`,
+  );
+
+  if (updated === original) {
+    console.warn(
+      "[release-apk] No se encontro versionCode/versionName en android/app/build.gradle.",
+    );
+    return false;
+  }
+
+  fs.writeFileSync(APP_BUILD_GRADLE, updated, "utf8");
+  return true;
+}
+
 function updateProjectVersion(version, code) {
-  // Estos tres archivos deben quedar con la misma version para evitar
-  // que Android o Expo reporten una version distinta a la publicada.
   const appJsonPath = path.join(PROJECT_ROOT, "app.json");
   const packageJsonPath = path.join(PROJECT_ROOT, "package.json");
   const packageLockPath = path.join(PROJECT_ROOT, "package-lock.json");
 
   const appJson = readJson(appJsonPath);
   appJson.expo.version = version;
-
-  // En bare workflow (la carpeta android/ vive en el repo) Expo no acepta
-  // politicas como {"policy": "appVersion"}: exige un valor literal. Lo
-  // mantenemos igual a la version para conservar esa misma semantica.
   appJson.expo.runtimeVersion = version;
   appJson.expo.android = appJson.expo.android ?? {};
-
-  // Android usa versionCode para saber si un APK es mas nuevo que otro.
-  // Siempre debe subir, aunque version cambie solo de 1.0.2 a 1.0.3.
   appJson.expo.android.versionCode = code;
   writeJson(appJsonPath, appJson);
 
@@ -155,11 +173,12 @@ function updateProjectVersion(version, code) {
     }
     writeJson(packageLockPath, packageLock);
   }
+
+  // Fuente de verdad real para el APK instalado.
+  updateAndroidGradleVersion(version, code);
 }
 
 function readProjectVersion() {
-  // Fuente de verdad de la version: app.json. El modo --auto la usa
-  // para publicar exactamente lo que se acaba de compilar.
   const appJson = readJson(path.join(PROJECT_ROOT, "app.json"));
   return {
     version: appJson.expo?.version,
@@ -178,8 +197,6 @@ function bumpPatch(version) {
 }
 
 function bumpVersion() {
-  // Auto-incremento que corre DESPUES de un build release exitoso.
-  // Deja app.json, package.json y package-lock.json listos para el proximo build.
   const { version, code } = readProjectVersion();
   const nextCode = (Number(code) || 0) + 1;
   const nextVersion = bumpPatch(version);
@@ -195,8 +212,6 @@ function bumpVersion() {
 }
 
 function updateBackendVersion(args) {
-  // Este JSON es lo que devuelve el backend en /pallets/api/version.
-  // La app lo consulta al iniciar para decidir si muestra el modal.
   const storageDir = path.join(args.backendRoot, "storage");
   const versionFile = path.join(storageDir, "pallet_version.json");
   const apkName = `${APK_PREFIX}-v${args.version}.apk`;
@@ -205,8 +220,6 @@ function updateBackendVersion(args) {
     fs.mkdirSync(storageDir, { recursive: true });
   }
 
-  // Preserva el changelog anterior y solo agrega/actualiza la entrada
-  // de esta version. Asi el modo --auto no borra el historial.
   let existing = {};
   if (fs.existsSync(versionFile)) {
     try {
@@ -239,7 +252,6 @@ function updateBackendVersion(args) {
     version: args.version,
     versionCode: args.code,
     mandatory: args.mandatory,
-    // Ruta HTTP relativa servida por IIS. No usar rutas Windows aqui.
     downloadUrl: `${DOWNLOAD_BASE}/${apkName}`,
     changelog,
   };
@@ -248,7 +260,6 @@ function updateBackendVersion(args) {
 }
 
 function buildApk() {
-  // Compila el APK release. El resultado queda en android/app/build/outputs/apk/release.
   const gradle = process.platform === "win32" ? "gradlew.bat" : "./gradlew";
   const result = spawnSync(gradle, ["assembleRelease"], {
     cwd: path.join(PROJECT_ROOT, "android"),
@@ -262,7 +273,6 @@ function buildApk() {
 }
 
 function copyApk(args) {
-  // Copia el app-release.apk generado al backend con el nombre versionado.
   if (!fs.existsSync(APK_SOURCE)) {
     throw new Error(`No existe el APK generado: ${APK_SOURCE}`);
   }
@@ -272,7 +282,10 @@ function copyApk(args) {
     fs.mkdirSync(updatesDir, { recursive: true });
   }
 
-  const destination = path.join(updatesDir, `${APK_PREFIX}-v${args.version}.apk`);
+  const destination = path.join(
+    updatesDir,
+    `${APK_PREFIX}-v${args.version}.apk`,
+  );
   fs.copyFileSync(APK_SOURCE, destination);
   return destination;
 }
@@ -284,18 +297,29 @@ function main() {
     return;
   }
 
-  // Auto-incremento posterior al build: lo dispara Gradle una vez que el APK
-  // de la version actual ya fue publicado.
+  if (args.sync) {
+    const { version, code } = readProjectVersion();
+    if (!version || !Number.isInteger(code)) {
+      throw new Error("app.json no tiene version/versionCode validos.");
+    }
+    const ok = updateAndroidGradleVersion(version, code);
+    console.log(
+      ok
+        ? `[release-apk] build.gradle sincronizado -> ${version} (code ${code}).`
+        : "[release-apk] No se pudo sincronizar build.gradle.",
+    );
+    return;
+  }
+
   if (args.bump) {
     const r = bumpVersion();
-    console.log(`[release-apk] version: ${r.currentVersion} -> ${r.nextVersion}`);
+    console.log(
+      `[release-apk] version: ${r.currentVersion} -> ${r.nextVersion}`,
+    );
     console.log(`[release-apk] versionCode: ${r.currentCode} -> ${r.nextCode}`);
     return;
   }
 
-  // Modo autonomo: lo dispara Gradle al terminar de ensamblar el APK release.
-  // No bumpea versiones ni recompila; publica la version que ya esta en app.json.
-  // Es resiliente: si el backend no es accesible solo avisa y no rompe el build.
   if (args.auto) {
     const { version, code } = readProjectVersion();
     if (!version || !Number.isInteger(code)) {
@@ -322,7 +346,9 @@ function main() {
           `[release-apk] pallet_version.json actualizado -> ${version} (code ${code}).`,
         );
       } catch (error) {
-        console.warn(`[release-apk] No se pudo actualizar el backend: ${error.message}`);
+        console.warn(
+          `[release-apk] No se pudo actualizar el backend: ${error.message}`,
+        );
       }
     }
 
@@ -331,21 +357,17 @@ function main() {
 
   assertValidArgs(args);
 
-  // 1. Actualiza versiones del proyecto.
   updateProjectVersion(args.version, args.code);
 
-  // 2. Opcional: compila APK.
   if (args.build) {
     buildApk();
   }
 
-  // 3. Opcional: copia APK al backend.
   let copiedApk = null;
   if (args.copyApk) {
     copiedApk = copyApk(args);
   }
 
-  // 4. Actualiza el JSON que consume la app para detectar la nueva version.
   if (args.updateBackend) {
     updateBackendVersion(args);
   }

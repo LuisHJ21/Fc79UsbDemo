@@ -1,12 +1,14 @@
+import { AlertIcon } from "@/constants/Alerts";
 import {
   BoxIcon,
   ChevronLeftIcon,
   ClockIcon,
+  CloseIcon,
+  ConfirmIcon,
   LayerIcon,
   PalletIcon,
   PrintIcon,
   SearchIcon,
-  WeightIcon,
 } from "@/constants/Icons";
 import { useAutoPalletContext } from "@/core/contexts/AutoPalletContexts";
 import { useConfContext } from "@/core/contexts/ConfContext";
@@ -46,6 +48,15 @@ import {
   SearchArticulo,
 } from "../utils";
 
+//--- EFECTO AL PRESIONAR (EL BOTÓN SE HUNDE)
+const efectoPresionado = ({ pressed }: { pressed: boolean }) =>
+  pressed
+    ? {
+        transform: [{ translateY: 3 }, { scale: 0.98 }],
+        opacity: 0.9,
+      }
+    : {};
+
 //--- FECHA PRODUCCION
 const obtenerFechaProd = (item: any): string => {
   const valor =
@@ -83,6 +94,7 @@ const PalletGen = () => {
   const [lastScan, setLastScan] = useState<any>(null); //const inputRef = useRef<TextInput>(null);
   const [visibityMdl, setVisibityMdl] = useState(false);
   const [confirmCerrar, setConfirmCerrar] = useState(false);
+  const [confirmIncompleto, setConfirmIncompleto] = useState(false);
   const [productoEscaneado, setProductoEscaneado] = useState(false);
   const [productoDuplicado, setProductoDuplicado] = useState<string | null>(
     null,
@@ -121,7 +133,7 @@ const PalletGen = () => {
   const crearPallet = async () => {
     const datos: DataFormPallet = {
       codigoArt: "",
-      estado: "1",
+      estado: "2", //--- NACE INCOMPLETO (ABIERTO): SOLO SE CIERRA CON "CERRAR PALLET COMPLETO"
       detalles: [],
       observacion: "", //operacion: "save",
       usuario: turnoActual?.usuario,
@@ -278,7 +290,7 @@ const PalletGen = () => {
 
       const datos: DataFormPallet = {
         codigoArt: detalles["codigoArt"],
-        estado: "1",
+        estado: "2", //--- SIGUE INCOMPLETO MIENTRAS SE ESCANEAN CAJAS
         detalles: [item],
         observacion: "", // operacion: "update",
         usuario: turnoActual?.usuario,
@@ -366,6 +378,20 @@ const PalletGen = () => {
     trazasRegistradas.current.clear();
   };
 
+  //  ---- SALIR DEJANDO EL PALLET INCOMPLETO (NO SE CIERRA EL PALLET)
+  const PalletIncompleto = () => {
+    setConfirmIncompleto(true);
+  };
+
+  const confirmarPalletIncompleto = () => {
+    setConfirmIncompleto(false);
+    volverAtras();
+  };
+
+  const cancelarPalletIncompleto = () => {
+    setConfirmIncompleto(false);
+  };
+
   useEffect(() => {
     obtenerTurno();
   }, []);
@@ -416,6 +442,18 @@ const PalletGen = () => {
         cancelText="NO"
         onConfirm={confirmarCerrarPallet}
         onCancel={cancelarCerrarPallet}
+      />
+
+      <AppAlert
+        visible={confirmIncompleto}
+        type="confirm"
+        icon={<AlertIcon type="warning" />}
+        title="¿DESEA SALIR?"
+        message="El pallet está incompleto y quedará abierto."
+        confirmText="SI"
+        cancelText="NO"
+        onConfirm={confirmarPalletIncompleto}
+        onCancel={cancelarPalletIncompleto}
       />
 
       <AppAlert
@@ -605,19 +643,52 @@ const PalletGen = () => {
             </View>
           </View>
 
-          {/* BOTÓN DE CIERRE FIJO */}
-          <View className="p-4 bg-white border-t border-slate-100 ">
+          {/* BOTONES DE ACCIÓN FIJOS */}
+          <View className="p-4 bg-white border-t border-slate-100 gap-3">
             <Pressable
               disabled={totalBoxes === 0} //activeOpacity={0.8}
               onPress={CerrarPallet}
-              className={`w-full py-5 rounded-2xl flex-row items-center justify-center ${totalBoxes > 0 ? "bg-blue-700 " : "bg-slate-300"}`}
+              android_ripple={{ color: "rgba(255,255,255,0.25)" }}
+              style={efectoPresionado}
+              className={`w-full py-6 px-4 rounded-2xl flex-row items-center justify-center overflow-hidden border-b-4 ${
+                totalBoxes > 0
+                  ? "bg-green-600 border-green-800"
+                  : "bg-slate-200 border-slate-300"
+              }`}
             >
+              <ConfirmIcon
+                size={28}
+                color={totalBoxes > 0 ? "#ffffff" : "#64748b"}
+              />
+
               <Text
-                className={`font-black text-xs uppercase tracking-widest mr-3 ${totalBoxes > 0 ? "text-white" : "text-slate-600"}`}
+                className={`ml-3 text-[20px] font-black uppercase tracking-wide ${totalBoxes > 0 ? "text-white" : "text-slate-500"}`}
               >
-                Cerrar Pallet
+                Cerrar Pallet Completo
               </Text>
-              <WeightIcon />
+            </Pressable>
+
+            <Pressable
+              disabled={totalBoxes === 0} //activeOpacity={0.8}
+              onPress={PalletIncompleto}
+              android_ripple={{ color: "rgba(255,255,255,0.25)" }}
+              style={efectoPresionado}
+              className={`w-full py-6 px-4 rounded-2xl flex-row items-center justify-center overflow-hidden border-b-4 ${
+                totalBoxes > 0
+                  ? "bg-red-600 border-red-800"
+                  : "bg-slate-200 border-slate-300"
+              }`}
+            >
+              <CloseIcon
+                size={28}
+                color={totalBoxes > 0 ? "#ffffff" : "#64748b"}
+              />
+
+              <Text
+                className={`ml-3 text-[20px] font-black uppercase tracking-wide ${totalBoxes > 0 ? "text-white" : "text-slate-500"}`}
+              >
+                Pallet Incompleto
+              </Text>
             </Pressable>
           </View>
         </View>
