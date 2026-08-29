@@ -47,6 +47,7 @@ import {
   ExtraerData,
   SearchArticulo,
 } from "../utils";
+import { parseTraza } from "../utils/traza";
 
 //--- EFECTO AL PRESIONAR (EL BOTÓN SE HUNDE)
 const efectoPresionado = ({ pressed }: { pressed: boolean }) =>
@@ -91,6 +92,8 @@ const PalletGen = () => {
   const [scanInput, setScanInput] = useState("");
   const [itemsPallet, setItemsPallet] = useState<any[]>([]);
   const [cabecera, setCabecera] = useState<any>(null);
+  //--- NOMBRE DEL ARTICULO (TODAS LAS CAJAS DEL PALLET COMPARTEN ARTICULO)
+  const [descArticulo, setDescArticulo] = useState("");
   const [lastScan, setLastScan] = useState<any>(null); //const inputRef = useRef<TextInput>(null);
   const [visibityMdl, setVisibityMdl] = useState(false);
   const [confirmCerrar, setConfirmCerrar] = useState(false);
@@ -99,9 +102,17 @@ const PalletGen = () => {
   const [productoDuplicado, setProductoDuplicado] = useState<string | null>(
     null,
   );
+  const [trazaInvalida, setTrazaInvalida] = useState<string | null>(null);
+  const [trazaDiferente, setTrazaDiferente] = useState<{
+    escaneada: string;
+    esperada: string;
+  } | null>(null);
   // ----------------------------  EVITAR DUPLICIDAD DE QR ESCANEADOS -----------------------------------
   //--- BLOQUEAR TRAZAS DUPLICADAS
   const trazasRegistradas = useRef<Set<string>>(new Set());
+
+  // -------------------  EVITAR MEZCLAR 2 TRAZAS DISTINTAS EN UN PALLET  -------------------
+  const trazaBasePallet = useRef<string | null>(null);
 
   const insets = useSafeAreaInsets();
 
@@ -133,7 +144,7 @@ const PalletGen = () => {
   const crearPallet = async () => {
     const datos: DataFormPallet = {
       codigoArt: "",
-      estado: "2", //--- NACE INCOMPLETO (ABIERTO): SOLO SE CIERRA CON "CERRAR PALLET COMPLETO"
+      estado: "2", //--- ESTADO DEL PALLET CUANDO SE CREA
       detalles: [],
       observacion: "", //operacion: "save",
       usuario: turnoActual?.usuario,
@@ -182,6 +193,7 @@ const PalletGen = () => {
       const detalles = service["detalles"];
       const cabecera = service["cabecera"];
       setCabecera(cabecera || null);
+      setDescArticulo(String(cabecera?.descArt || "").trim());
       setItemsPallet(detalles || []);
 
       trazasRegistradas.current = new Set<string>(
@@ -189,6 +201,13 @@ const PalletGen = () => {
           .map((detalle: any) => String(detalle?.traza || "").trim())
           .filter((traza: string) => traza !== ""),
       );
+
+      //--- LA BASE DEL PALLET SALE DE LA PRIMERA CAJA YA REGISTRADA
+      const baseRegistrada = (detalles || [])
+        .map((detalle: any) => parseTraza(String(detalle?.traza || ""))?.base)
+        .find((base: string | undefined) => !!base);
+
+      trazaBasePallet.current = baseRegistrada || null;
     };
 
     obtenerItemsdb();
@@ -208,6 +227,8 @@ const PalletGen = () => {
     }
     // ---- TRAZA RESERVADA (EN CASO DE ERROR PERMITE REINTENTAR)
     let trazaReservada: string | null = null;
+    // ---- BASE RESERVADA POR LA PRIMERA CAJA (SE LIBERA SI FALLA EL REGISTRO)
+    let baseReservada: string | null = null;
 
     try {
       if (!palletCarga) return;
@@ -229,6 +250,32 @@ const PalletGen = () => {
       const traza = String(detalles["traza"] || "").trim();
 
       if (traza === "") return;
+
+      //--- LA TRAZA DEBE CUMPLIR EL FORMATO: I001-010626-N-0001
+      const trazaParseada = parseTraza(traza);
+
+      if (!trazaParseada) {
+        setTrazaInvalida(traza);
+        return;
+      }
+
+      //--- UN PALLET NO PUEDE MEZCLAR 2 TRAZAS DISTINTAS -  (ENTRE CAJAS SOLO PUEDE CAMBIAR EL CORRELATIVO)
+      if (
+        trazaBasePallet.current &&
+        trazaBasePallet.current !== trazaParseada.base
+      ) {
+        setTrazaDiferente({
+          escaneada: trazaParseada.completa,
+          esperada: trazaBasePallet.current,
+        });
+        return;
+      }
+
+      if (!trazaBasePallet.current) {
+        //--- PRIMERA CAJA: FIJA LA TRAZA DEL PALLET ANTES DE LOS await
+        trazaBasePallet.current = trazaParseada.base;
+        baseReservada = trazaParseada.base;
+      }
 
       // SE REPITE SOLO EN PROCESO
       const tipoProceso = await ObtenerTipoProcesoOT(detalles["ot"]);
@@ -252,10 +299,12 @@ const PalletGen = () => {
         return;
       }
 
+      setDescArticulo(String(verificar["descArt"] || "").trim());
+
       const plan = await plandiarioxTraza(detalles["traza"]);
 
       //--- FECHA PRODUCCION: MANDA LA ASIGNADA A LA TRAZA, NO LA DEL QR
-      // (ALGUNAS ETIQUETAS TRAEN LA FECHA DEL PLAN EN ESE CAMPO)
+
       const fechaProdTraza = await fechaProduccionxTraza(traza);
       const fechaProd =
         fechaProdTraza !== "" ? fechaProdTraza : detalles["fechaProd"];
@@ -325,6 +374,7 @@ const PalletGen = () => {
       setProductoEscaneado(true);
 
       trazaReservada = null; // quedó registrada, la reserva se vuelve definitiva
+      baseReservada = null; // el pallet queda amarrado a esta traza
       //* SwAlert.close();
     } catch (error) {
       console.log(error); //setScanInput("");
@@ -332,6 +382,10 @@ const PalletGen = () => {
     } finally {
       if (trazaReservada) {
         trazasRegistradas.current.delete(trazaReservada);
+      }
+
+      if (baseReservada && trazaBasePallet.current === baseReservada) {
+        trazaBasePallet.current = null;
       }
     }
   };
@@ -362,7 +416,9 @@ const PalletGen = () => {
     clearPalletCarga();
     setItemsPallet([]);
     setLastScan(null);
+    setDescArticulo("");
     trazasRegistradas.current.clear();
+    trazaBasePallet.current = null;
   };
 
   //  ---- CAMBIO (PERMITE CANCELAR EL CIERRE DEL PALET Y SEGUIR EN LA MISMA VISTA)
@@ -375,7 +431,9 @@ const PalletGen = () => {
     clearPalletCarga();
     setItemsPallet([]);
     setLastScan(null);
+    setDescArticulo("");
     trazasRegistradas.current.clear();
+    trazaBasePallet.current = null;
   };
 
   //  ---- SALIR DEJANDO EL PALLET INCOMPLETO (NO SE CIERRA EL PALLET)
@@ -468,9 +526,27 @@ const PalletGen = () => {
         visible={productoDuplicado !== null}
         type="warning"
         title="CAJA YA REGISTRADA"
-        message={`La traza ${productoDuplicado} ya fue registrada en este pallet.`}
+        message={`La traza ${productoDuplicado} Ya Fue Registrada en el Pallet.`}
         confirmText="OK"
         onConfirm={() => setProductoDuplicado(null)}
+      />
+
+      <AppAlert
+        visible={trazaInvalida !== null}
+        type="warning"
+        title="TRAZA CON FORMATO INVÁLIDO"
+        message={`La traza ${trazaInvalida} QR no cumple con el Formato Requerido.`}
+        confirmText="OK"
+        onConfirm={() => setTrazaInvalida(null)}
+      />
+
+      <AppAlert
+        visible={trazaDiferente !== null}
+        type="warning"
+        title="TRAZA DIFERENTE"
+        message={`Este pallet es de la traza ${trazaDiferente?.esperada}. La caja escaneada (${trazaDiferente?.escaneada}) pertenece a otra traza.`}
+        confirmText="OK"
+        onConfirm={() => setTrazaDiferente(null)}
       />
 
       {/* HEADER NATIVO */}
@@ -582,8 +658,19 @@ const PalletGen = () => {
               Artículo
             </Text>
 
-            <Text className="text-2xl font-bold text-slate-450 mb-4">
+            <Text className="text-2xl font-bold text-slate-450 mb-3">
               {articleCode}
+            </Text>
+
+            <Text className="text-[13px] font-bold text-slate-400 uppercase">
+              Nombre de Artículo
+            </Text>
+
+            <Text
+              numberOfLines={2}
+              className="text-lg font-semibold text-slate-600 mb-4"
+            >
+              {descArticulo !== "" ? descArticulo : "---"}
             </Text>
 
             <View className="flex-row gap-3">

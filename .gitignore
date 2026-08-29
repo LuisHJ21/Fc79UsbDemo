@@ -48,3 +48,7 @@ app-example
 *.rar
 *.7z
 *.tar
+
+#IA
+*.txt
+.claude/
