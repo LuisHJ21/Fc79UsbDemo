@@ -90,6 +90,9 @@ const PalletGen = () => {
     useConfContext();
   const [lineas, setLineas] = useState<Linea[]>([]);
   const [visibleLineas, setVisibleLineas] = useState(false);
+  const [lineaPorConfirmar, setLineaPorConfirmar] = useState<Linea | null>(
+    null,
+  );
 
   const { statusLog, statusType, setScannedCode } = useUsbScanner({
     baudRate: 9600,
@@ -480,6 +483,22 @@ const PalletGen = () => {
           changeVisibityMdl={changeVisibityMdl}
         />
 
+        <AppAlert
+          visible={lineaPorConfirmar !== null}
+          type="confirm"
+          title="¿SELECCIONAR LÍNEA?"
+          message={`Se trabajará en la línea ${
+            lineaPorConfirmar?.descr?.trim() || lineaPorConfirmar?.cod_linea
+          }.`}
+          confirmText="SI"
+          cancelText="NO"
+          onConfirm={() => {
+            if (lineaPorConfirmar) setLineaElegida(lineaPorConfirmar.cod_linea);
+            setLineaPorConfirmar(null);
+          }}
+          onCancel={() => setLineaPorConfirmar(null)}
+        />
+
         {/* DATOS DEL TURNO: 3 CARDS */}
         <View className="px-5 pt-5 flex-row gap-3">
           {[
@@ -613,8 +632,8 @@ const PalletGen = () => {
                         <Pressable
                           key={linea.cod_linea}
                           onPress={() => {
-                            setLineaElegida(linea.cod_linea);
                             setVisibleLineas(false);
+                            setLineaPorConfirmar(linea);
                           }}
                           style={efectoPresionado}
                           className={`mb-3 px-5 py-4 rounded-2xl border-2 ${
@@ -640,10 +659,20 @@ const PalletGen = () => {
           </View>
         </Modal>
 
+        {/* SIN LINEA ELEGIDA NO SE PUEDE GENERAR NI BUSCAR PALLET */}
+        {!lineaElegida && (
+          <Text className="px-5 pt-4 text-2xl font-bold text-orange-600 text-center">
+            DEBE SELECCIONAR UNA LÍNEA DE TRABAJO PARA DESBLOQUEAR LOS BOTONES
+          </Text>
+        )}
+
         <View className="p-5 flex-row gap-2">
           <Pressable
-            className="flex-1 flex-col uppercase p-5 bg-blue-600 hover:bg-blue-700 rounded-lg text-white  items-center justify-center gap-2"
+            className={`flex-1 flex-col uppercase p-5 rounded-lg text-white  items-center justify-center gap-2 ${
+              lineaElegida ? "bg-blue-600 hover:bg-blue-700" : "bg-slate-400"
+            }`}
             onPress={crearPallet}
+            disabled={!lineaElegida}
           >
             <PalletIcon size={30} />
             <Text className="font-bold text-3xl text-white">
@@ -652,8 +681,11 @@ const PalletGen = () => {
           </Pressable>
 
           <Pressable
-            className=" flex-1 flex-col uppercase p-5 bg-blue-600 hover:bg-blue-700 rounded-lg text-white  items-center justify-center gap-2"
+            className={`flex-1 flex-col uppercase p-5 rounded-lg text-white  items-center justify-center gap-2 ${
+              lineaElegida ? "bg-blue-600 hover:bg-blue-700" : "bg-slate-400"
+            }`}
             onPress={changeVisibityMdl}
+            disabled={!lineaElegida}
           >
             <SearchIcon size={30} />
             <Text className="font-bold text-3xl text-white">Buscar Pallet</Text>
