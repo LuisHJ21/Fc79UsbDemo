@@ -1,6 +1,8 @@
 import { AlertIcon } from "@/constants/Alerts";
 import {
   BoxIcon,
+  CalendarEndIcon,
+  CalendarStartIcon,
   ChevronLeftIcon,
   ClockIcon,
   CloseIcon,
@@ -9,6 +11,7 @@ import {
   PalletIcon,
   PrintIcon,
   SearchIcon,
+  SupervisorIcon,
 } from "@/constants/Icons";
 import { useAutoPalletContext } from "@/core/contexts/AutoPalletContexts";
 import { useConfContext } from "@/core/contexts/ConfContext";
@@ -461,6 +464,80 @@ const PalletGen = () => {
           visible={visibityMdl}
           changeVisibityMdl={changeVisibityMdl}
         />
+
+        {/* DATOS DEL TURNO: 3 CARDS */}
+        <View className="px-5 pt-5 flex-row gap-3">
+          {[
+            {
+              label: "Supervisor",
+              valor: turnoActual?.usuario?.trim().toUpperCase(),
+              Icono: SupervisorIcon,
+              colorIcono: "#2563eb",
+              fondoIcono: "bg-blue-100",
+            },
+            {
+              label: "Fecha inicio",
+              fecha: turnoActual?.fechaI,
+              Icono: CalendarStartIcon,
+              colorIcono: "#16a34a",
+              fondoIcono: "bg-green-100",
+            },
+            {
+              label: "Fecha fin",
+              fecha: turnoActual?.fechaF,
+              vacio: turnoActual?.estado === "1" ? "EN CURSO" : undefined,
+              Icono: CalendarEndIcon,
+              colorIcono: "#ea580c",
+              fondoIcono: "bg-orange-100",
+            },
+          ].map(
+            ({ label, valor, fecha, vacio, Icono, colorIcono, fondoIcono }) => {
+              const [dia, hora] = (fecha ?? "").split(" ");
+
+              return (
+                <View
+                  key={label}
+                  className="flex-1 flex-row items-center justify-between bg-white rounded-2xl border border-slate-200 px-4 py-4"
+                >
+                  <View className="flex-row items-center gap-3">
+                    <View
+                      className={`w-12 h-12 rounded-xl items-center justify-center ${fondoIcono}`}
+                    >
+                      <Icono color={colorIcono} size={28} />
+                    </View>
+                    <Text className="text-[18px] text-slate-500 font-bold uppercase tracking-wider">
+                      {label}
+                    </Text>
+                  </View>
+
+                  {/* DERECHA: VALOR */}
+                  {valor !== undefined ? (
+                    <Text className="text-2xl font-black text-center text-slate-600">
+                      {valor || "----"}
+                    </Text>
+                  ) : dia ? (
+                    <View className="items-end">
+                      <Text className="text-2xl font-black text-slate-600">
+                        {dia}
+                      </Text>
+                      <Text className="text-xl from-neutral-700 text-slate-600">
+                        {hora}
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text
+                      className={`text-2xl font-black ${
+                        vacio ? "text-green-700" : "text-slate-600"
+                      }`}
+                    >
+                      {vacio ?? "----"}
+                    </Text>
+                  )}
+                </View>
+              );
+            },
+          )}
+        </View>
 
         <View className="p-5 flex-row gap-2">
           <Pressable

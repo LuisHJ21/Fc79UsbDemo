@@ -197,3 +197,27 @@ export const LoadingIcon = ({ color, size }: IconProps) => {
     </Animated.View>
   );
 };
+
+export const SupervisorIcon = ({ color, size }: IconProps) => (
+  <MaterialCommunityIcons
+    name="account-tie"
+    size={size ?? 28}
+    color={color ?? "white"}
+  />
+);
+
+export const CalendarStartIcon = ({ color, size }: IconProps) => (
+  <MaterialCommunityIcons
+    name="calendar-clock"
+    size={size ?? 28}
+    color={color ?? "white"}
+  />
+);
+
+export const CalendarEndIcon = ({ color, size }: IconProps) => (
+  <MaterialCommunityIcons
+    name="calendar-check"
+    size={size ?? 28}
+    color={color ?? "white"}
+  />
+);
