@@ -15,6 +15,7 @@ import {
 } from "@/constants/Icons";
 import { useAutoPalletContext } from "@/core/contexts/AutoPalletContexts";
 import { useConfContext } from "@/core/contexts/ConfContext";
+import { ObtenerLineas } from "@/core/services/Linea.service";
 import { ObtenerTipoProcesoOT } from "@/core/services/Ot.service";
 import {
   DetallePallet,
@@ -29,11 +30,13 @@ import { ImprimirQR } from "@/core/services/Print.service";
 import { ObtenerTurnoActual } from "@/core/services/Turno.service";
 import { useUsbScanner } from "@/hooks/useUsbScanner";
 import { DataFormPallet } from "@/infraestructure/interfaces";
+import { Linea } from "@/infraestructure/interfaces/linea.interface";
 import { Turno } from "@/infraestructure/interfaces/turno.interface";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -83,7 +86,10 @@ const PalletGen = () => {
   const { cargando, palletCarga, setPalletCarga, clearPalletCarga } =
     useAutoPalletContext();
 
-  const { setTurnoActual, turnoActual } = useConfContext();
+  const { setTurnoActual, turnoActual, lineaElegida, setLineaElegida } =
+    useConfContext();
+  const [lineas, setLineas] = useState<Linea[]>([]);
+  const [visibleLineas, setVisibleLineas] = useState(false);
 
   const { statusLog, statusType, setScannedCode } = useUsbScanner({
     baudRate: 9600,
@@ -453,8 +459,17 @@ const PalletGen = () => {
     setConfirmIncompleto(false);
   };
 
+  const obtenerLineas = async () => {
+    const peticion = await ObtenerLineas();
+
+    if (!peticion?.error && Array.isArray(peticion?.data)) {
+      setLineas(peticion.data);
+    }
+  };
+
   useEffect(() => {
     obtenerTurno();
+    obtenerLineas();
   }, []);
 
   if (!cargando) {
@@ -538,6 +553,92 @@ const PalletGen = () => {
             },
           )}
         </View>
+
+        {/* LINEAS DE TRABAJO: BOTON QUE ABRE LA LISTA */}
+        <View className="px-5 pt-5">
+          <Pressable
+            onPress={() => setVisibleLineas(true)}
+            style={efectoPresionado}
+            className="flex-row items-center justify-between bg-white rounded-2xl border-2 border-slate-200 px-5 py-4"
+          >
+            <View className="flex-1 items-center">
+              <Text className="text-[20px] text-slate-500 font-bold uppercase tracking-wider text-center">
+                Seleccione Línea de trabajo
+              </Text>
+              <Text className="text-2xl font-black uppercase text-slate-700 text-center">
+                {lineas
+                  .find((linea) => linea.cod_linea === lineaElegida)
+                  ?.descr?.trim() ||
+                  lineaElegida ||
+                  "Seleccionar línea"}
+              </Text>
+            </View>
+            <Text className="text-3xl font-black text-blue-600">▼</Text>
+          </Pressable>
+        </View>
+
+        <Modal
+          visible={visibleLineas}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setVisibleLineas(false)}
+        >
+          <View className="flex-1 bg-black/50 items-center justify-center p-8">
+            <View className="w-full max-w-2xl max-h-[80%] bg-white rounded-3xl overflow-hidden">
+              {/* CABECERA DEL MODAL */}
+              <View className="flex-row items-center bg-blue-600 px-5 py-4">
+                <View className="w-12" />
+                <Text className="flex-1 text-2xl font-black uppercase text-white text-center">
+                  Líneas de trabajo
+                </Text>
+                <Pressable
+                  onPress={() => setVisibleLineas(false)}
+                  className="w-12 h-12 rounded-xl items-center justify-center bg-blue-500"
+                >
+                  <CloseIcon color="#ffffff" />
+                </Pressable>
+              </View>
+
+              <View className="p-5 flex-shrink">
+                {lineas.length === 0 ? (
+                  <Text className="text-xl text-slate-400 py-6 text-center">
+                    No hay líneas disponibles
+                  </Text>
+                ) : (
+                  <ScrollView>
+                    {lineas.map((linea) => {
+                      const elegida = lineaElegida === linea.cod_linea;
+
+                      return (
+                        <Pressable
+                          key={linea.cod_linea}
+                          onPress={() => {
+                            setLineaElegida(linea.cod_linea);
+                            setVisibleLineas(false);
+                          }}
+                          style={efectoPresionado}
+                          className={`mb-3 px-5 py-4 rounded-2xl border-2 ${
+                            elegida
+                              ? "bg-blue-600 border-blue-700"
+                              : "bg-white border-slate-200"
+                          }`}
+                        >
+                          <Text
+                            className={`text-2xl font-black uppercase text-center ${
+                              elegida ? "text-white" : "text-slate-700"
+                            }`}
+                          >
+                            {linea.descr?.trim() || linea.cod_linea}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </ScrollView>
+                )}
+              </View>
+            </View>
+          </View>
+        </Modal>
 
         <View className="p-5 flex-row gap-2">
           <Pressable
