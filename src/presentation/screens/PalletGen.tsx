@@ -90,6 +90,11 @@ const PalletGen = () => {
     useConfContext();
   const [lineas, setLineas] = useState<Linea[]>([]);
   const [visibleLineas, setVisibleLineas] = useState(false);
+  const [alertaTurno, setAlertaTurno] = useState<{
+    type: "success" | "warning" | "error";
+    title: string;
+    message: string;
+  } | null>(null);
   const [lineaPorConfirmar, setLineaPorConfirmar] = useState<Linea | null>(
     null,
   );
@@ -145,12 +150,46 @@ const PalletGen = () => {
   const paddingTop = insets.top;
   const paddingBottom = insets.bottom;
 
-  const obtenerTurno = async () => {
+  const obtenerTurno = async (): Promise<Turno | null> => {
     const peticion = await ObtenerTurnoActual();
 
     if (!peticion?.error && peticion?.data) {
       setTurnoActual(peticion.data);
+      return peticion.data;
     }
+
+    return null;
+  };
+
+  //--- TURNO EN CURSO (ESTADO "1"). SI FINALIZO SE BLOQUEA TODA LA PANTALLA
+  const turnoActivo = turnoActual?.estado === "1";
+  const puedeUsarPallets = turnoActivo && !!lineaElegida;
+  const consultarTurno = async () => {
+    const turno = await obtenerTurno();
+
+    if (!turno) {
+      setAlertaTurno({
+        type: "error",
+        title: "ERROR",
+        message: "No se pudo consultar el turno.",
+      });
+      return;
+    }
+
+    setAlertaTurno(
+      turno.estado === "1"
+        ? {
+            type: "success",
+            title: "TURNO EN CURSO",
+            message: "El turno está activo, puede continuar.",
+          }
+        : {
+            type: "warning",
+            title: "TURNO FINALIZADO",
+            message:
+              "El turno sigue finalizado. Espere a que se inicie un nuevo turno.",
+          },
+    );
   };
 
   const crearPallet = async () => {
@@ -484,6 +523,15 @@ const PalletGen = () => {
         />
 
         <AppAlert
+          visible={alertaTurno !== null}
+          type={alertaTurno?.type ?? "warning"}
+          title={alertaTurno?.title}
+          message={alertaTurno?.message ?? ""}
+          confirmText="OK"
+          onConfirm={() => setAlertaTurno(null)}
+        />
+
+        <AppAlert
           visible={lineaPorConfirmar !== null}
           type="confirm"
           title="¿SELECCIONAR LÍNEA?"
@@ -573,12 +621,15 @@ const PalletGen = () => {
           )}
         </View>
 
-        {/* LINEAS DE TRABAJO: BOTON QUE ABRE LA LISTA */}
+        {/* LINEAS DE TRABAJO:*/}
         <View className="px-5 pt-5">
           <Pressable
             onPress={() => setVisibleLineas(true)}
+            disabled={!turnoActivo}
             style={efectoPresionado}
-            className="flex-row items-center justify-between bg-white rounded-2xl border-2 border-slate-200 px-5 py-4"
+            className={`flex-row items-center justify-between rounded-2xl border-2 border-slate-200 px-5 py-4 ${
+              turnoActivo ? "bg-white" : "bg-slate-200 opacity-60"
+            }`}
           >
             <View className="flex-1 items-center">
               <Text className="text-[20px] text-slate-500 font-bold uppercase tracking-wider text-center">
@@ -659,8 +710,26 @@ const PalletGen = () => {
           </View>
         </Modal>
 
-        {/* SIN LINEA ELEGIDA NO SE PUEDE GENERAR NI BUSCAR PALLET */}
-        {!lineaElegida && (
+        {/* BLOQUEO DE APLICACION */}
+        {!turnoActivo && (
+          <View className="mx-5 mt-5 p-5 rounded-2xl bg-red-50 border-2 border-red-300 items-center gap-4">
+            <Text className="text-2xl font-black text-red-700 text-center uppercase">
+              El turno ha finalizado. Todas las opciones están bloqueadas.
+            </Text>
+            <Pressable
+              onPress={consultarTurno}
+              style={efectoPresionado}
+              className="flex-row items-center gap-3 px-8 py-4 rounded-xl bg-red-600"
+            >
+              <ClockIcon color="#ffffff" />
+              <Text className="text-2xl font-black uppercase text-white">
+                Consultar turno
+              </Text>
+            </Pressable>
+          </View>
+        )}
+
+        {turnoActivo && !lineaElegida && (
           <Text className="px-5 pt-4 text-2xl font-bold text-orange-600 text-center">
             DEBE SELECCIONAR UNA LÍNEA DE TRABAJO PARA DESBLOQUEAR LOS BOTONES
           </Text>
@@ -669,10 +738,12 @@ const PalletGen = () => {
         <View className="p-5 flex-row gap-2">
           <Pressable
             className={`flex-1 flex-col uppercase p-5 rounded-lg text-white  items-center justify-center gap-2 ${
-              lineaElegida ? "bg-blue-600 hover:bg-blue-700" : "bg-slate-400"
+              puedeUsarPallets
+                ? "bg-blue-600 hover:bg-blue-700"
+                : "bg-slate-400"
             }`}
             onPress={crearPallet}
-            disabled={!lineaElegida}
+            disabled={!puedeUsarPallets}
           >
             <PalletIcon size={30} />
             <Text className="font-bold text-3xl text-white">
@@ -682,10 +753,12 @@ const PalletGen = () => {
 
           <Pressable
             className={`flex-1 flex-col uppercase p-5 rounded-lg text-white  items-center justify-center gap-2 ${
-              lineaElegida ? "bg-blue-600 hover:bg-blue-700" : "bg-slate-400"
+              puedeUsarPallets
+                ? "bg-blue-600 hover:bg-blue-700"
+                : "bg-slate-400"
             }`}
             onPress={changeVisibityMdl}
-            disabled={!lineaElegida}
+            disabled={!puedeUsarPallets}
           >
             <SearchIcon size={30} />
             <Text className="font-bold text-3xl text-white">Buscar Pallet</Text>
